@@ -1,0 +1,19 @@
+# Define configuration
+# Remove/repace these comments to set level to debug/info
+
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+#CONFIG_LOG_DEFAULT_LEVEL_DEBUG=y
+#CONFIG_LOG_DEFAULT_LEVEL=4
+
+# Serial Baud-Rate
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+
+# Serial flasher config
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# Partition Table
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="buildConfigs/JewelOS/partitions.csv"
+

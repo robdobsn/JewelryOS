@@ -1,0 +1,10 @@
+idf_component_register(
+                SRCS 
+                  "Jewelry/Jewelry.cpp"
+                INCLUDE_DIRS
+                  "Jewelry"
+                REQUIRES
+                  raftcore-src
+                  rafti2c-src
+                  hardware
+                )

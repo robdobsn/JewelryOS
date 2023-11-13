@@ -1,0 +1,52 @@
+[
+    {
+        "SysType": "JewelOS",
+        "CmdsAtStart": "",
+        "WebUI": "",
+        "SysManager": {
+            "monitorPeriodMs":30000,
+            "reportList":[
+                "NetMan",
+                "BLEMan",
+                "SysMan",
+                "ProtExchg",
+                "StatsCB"
+            ],
+            "pauseWiFiforBLE":1,
+            "slowSysModMs": 100
+        },
+        "LogManager": {
+            "logDests": [
+                {
+                    "enable": false,
+                    "type": "Papertrail",
+                    "host": "logs2.papertrailapp.com",
+                    "port": 48992,
+                    "sysName": "JewelOS"
+                }
+            ]
+        },
+        "ProtExchg": {
+            "RICSerial":{
+                "FrameBound":"0xE7",
+                "CtrlEscape":"0xD7"
+            }
+        },
+        "Jewelry": {
+            "sdaPin": 10,
+            "sclPin": 8,
+            "i2cFreq": 100000,
+            "MAX30101": {
+                "i2cAddr": 87,
+                "redLedIntensity": "0x1f",
+                "sampleAverage": 8,
+                "sampleRate": 400,
+                "pulseWidth": 411,
+                "adcRange": 4096,
+                "fifoAlmostFullThreshold": 31
+            },
+            "powerCtrlPin": 7,
+            "vsensePin": 4
+        }
+    }
+]

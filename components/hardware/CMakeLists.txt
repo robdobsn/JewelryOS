@@ -1,0 +1,11 @@
+idf_component_register(
+                SRCS 
+                  "MAX30101/MAX30101.cpp"
+                  "PowerControl/PowerControl.cpp"
+                INCLUDE_DIRS
+                  "MAX30101"
+                  "PowerControl"
+                REQUIRES
+                  raftcore-src
+                  rafti2c-src
+                )
