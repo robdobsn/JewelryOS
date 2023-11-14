@@ -13,6 +13,7 @@
 // #include "RaftI2CCentral.h"
 #include "BusI2CESPIDF.h"
 #include "PowerControl.h"
+#include "LEDHeart.h"
 
 class Jewelry : public SysModBase
 {
@@ -30,6 +31,10 @@ protected:
 
 private:
 
+    // Time between heart pulses
+    uint32_t _timeBetweenHeartPulsesMs = 1000;
+    uint32_t _lastHeartPulseTimeMs = 0;
+
     // Debug
     uint32_t _lastDebugTimeMs = 0;
 
@@ -45,4 +50,7 @@ private:
 
     // Power control
     PowerControl _powerControl;
+
+    // LED heart display
+    LEDHeart _ledHeart;
 };

@@ -8,10 +8,14 @@
 #include <stdexcept>
 #include <vector>
 #include <fstream>
-#include "SO_BPF.h"
+
+// #include "SO_BPF.h"
+#include "IIR1/Butterworth.h"
 #include <stdint.h>
 #include <stddef.h>
+#include <math.h>
 
+#define MATCH_FREQUENCY
 
 std::string findLatestLogFile(const std::string &logFilePath)
 {
@@ -103,30 +107,105 @@ std::pair<std::vector<int>, std::vector<int>> readHRMData(std::string logfile)
     return {timestamps, red_led_adc_values};
 }
 
-class BiquadBPFFilter
+// class BiquadBPFFilter
+// {
+// public:
+//     BiquadBPFFilter()
+//     {
+//         // Our data is actually 50Hz and we want centre freequency of 1.5Hz
+//         // but the args to calculate_coeffs are integers so the
+//         // values for fc and fs are scaled up by a factor of 1000
+//         // _bpf.calculate_coeffs(.5, 500, 50000);
+//         SO_BPF::tp_coeffs coeffs = {
+//             0.21279373587133188,
+//             0,
+//             -0.21279373587133188,
+//             -1.524949463540011,
+//             0.5744125282573361
+//         };
+//         _bpf.set_coefficients(coeffs);
+
+//     }
+//     ~BiquadBPFFilter()
+//     {
+//     }
+//     int process(int sample)
+//     {
+//         return _bpf.process(sample);
+//     }
+
+// private:
+//     SO_BPF _bpf;
+// };
+
+// BiquadBPFFilter bpf;
+// SO_BPF bpf;
+
+class IIRFilter
 {
 public:
-    BiquadBPFFilter()
+    IIRFilter(double a0, double a1, double a2, double b0, double b1, double b2, double zi0, double zi1)
     {
-        // Our data is actually 50Hz and we want centre freequency of 1.5Hz
-        // but the args to calculate_coeffs are integers so the
-        // values for fc and fs are scaled up by a factor of 1000
-        _bpf.calculate_coeffs(0.5, 500, 50000);
+        a[0] = a0;
+        a[1] = a1;
+        a[2] = a2;
+        b[0] = b0;
+        b[1] = b1;
+        b[2] = b2;
+        zi[0] = zi0;
+        zi[1] = zi1;
+        // _bpf.setup
+        // // Our data is actually 50Hz and we want centre freequency of 1.5Hz
+        // // but the args to calculate_coeffs are integers so the
+        // // values for fc and fs are scaled up by a factor of 1000
+        // // _bpf.calculate_coeffs(.5, 500, 50000);
+        // // _bpf.setup(500, 10, 10);
+        // _bpf.setup(50, 2, 2);
+        // // _bpf.setup(50, 24);
+
+        // // printf("BPF: %f %f %f %f %f %f\n", _bpf.getA0(), _bpf.getA1(), _bpf.getA2(), _bpf.getB1(), _bpf.getB2(), _bpf.getC0());
+        // bhigh: [ 0.93552671 -1.87105341  0.93552671] ahigh: [ 1.         -1.86689228  0.87521455] zihigh: [-0.93552671  0.93552671]
+
+
     }
-    ~BiquadBPFFilter()
+    ~IIRFilter()
     {
     }
-    int process(int sample)
-    {
-        return _bpf.process(sample);
-    }
+    double process(double x1) {
+        if (_isFirst)
+        {
+            v1m1 = zi[0] * x1;
+            v2m1 = zi[1] * x1;
+            _isFirst = false;
+        }
+        double y1 = 0;
+        y1 = (b[0] * x1 + v1m1) / a[0];
+        v1m = (b[1] * x1 + v2m1) - a[1] * y1;
+        v2m = b[2] * x1 - a[2] * y1;
+        v1m1 = v1m;
+        v2m1 = v2m;
+        if (count < 100)
+        {
+            printf("i: %d x1: %f y1: %f v1m1: %f v2m1: %f v1m: %f v2m: %f b: %f %f %f a: %f %f %f\n",
+                    count, x1, y1, v1m1, v2m1, v1m, v2m, b[0], b[1], b[2], a[0], a[1], a[2]);
+            count++;
+        }
+        return y1;
+    }       
 
 private:
-    SO_BPF _bpf;
+    double a[3] = {1, -1.7786317778245846, 0.8008026466657073};
+    double b[3] = {0.005542717210280682, 0.011085434420561363, 0.005542717210280682};
+    double zi[2] = {0.9944572827897219, -0.7952599294554288};
+    double v1m1 = 0, v2m1 = 0, v1m, v2m;
+    bool _isFirst = true;
+    uint32_t count = 0;
+
+    // Iir::Butterworth::BandPass<2> _bpf;
 };
 
-BiquadBPFFilter bpf;
-// SO_BPF bpf;
+IIRFilter lowPassFilter(1, -1.7786317778245846, 0.8008026466657073, 0.005542717210280682, 0.011085434420561363, 0.005542717210280682, 0.9944572827897219, -0.7952599294554288);
+IIRFilter highPassFilter(1, -1.86689228, 0.87521455, 0.93552671, -1.87105341, 0.93552671, -0.93552671, 0.93552671);
 
 class ZeroCrossingDetector
 {
@@ -313,7 +392,7 @@ public:
         // Save error to previous error
         _lastError = error;
 
-        printf("PID: %f %f %f %f %f %f %f %f %f\n", setPoint, processVariable, timeDeltaSecs, error, pOut, iOut, dOut, output, _integral);
+        printf("PID: %f %f %f %f %f %f %f %f %f", setPoint, processVariable, timeDeltaSecs, error, pOut, iOut, dOut, output, _integral);
 
         return output;
     }
@@ -331,7 +410,11 @@ class PhaseLockedLoop
 {
 public:
     PhaseLockedLoop(float maxFreqHz, float minFreqHz, float maxPIDOutput) :
-        _frequencyPID(0.1, 0, 0, maxPIDOutput, -maxPIDOutput)
+#ifdef MATCH_FREQUENCY
+        _frequencyPID(5.5, 0.1, 0.2, maxPIDOutput, -maxPIDOutput)
+#else
+        _phasePID(1, 0, 0, maxPIDOutput, -maxPIDOutput)
+#endif
     {
         _maxFreqHz = maxFreqHz;
         _minFreqHz = minFreqHz;
@@ -347,7 +430,7 @@ public:
             _lastZeroCrossingMs = sampleTimeMs;
             return;
         }
-++
+
         // // Expected time to next peak
         // int expectedNextPeakMs = timeToNextPeakMs(sampleTimeMs);
 
@@ -363,6 +446,8 @@ public:
         // Check valid
         if (sampleTimeMs <= _lastZeroCrossingMs)
             return;
+
+#ifdef MATCH_FREQUENCY
 
         // Time between zero crossings
         uint32_t intervalMs = sampleTimeMs - _lastZeroCrossingMs;
@@ -382,20 +467,41 @@ public:
         // Update PID
         _beatFreqHz -= _frequencyPID.process(_beatFreqHz, measuredFreqHz, intervalMs) * 0.1;
 
-        // // Change beat frequency based on PID output
-        // _beatFreqHz += _pid.process(expectedNextPeakMs, sampleTimeMs) / 1000.0;
+#else
+        // Calculate number of cycles since first zero crossing
+        int numCycles = round(_beatFreqHz * ((sampleTimeMs - _zeroCrossingFirstMs) / 1000.0));
 
+        // Expected zero crossing ms
+        float expectedZeroCrossingSecs = (numCycles * _beatFreqHz) + (_zeroCrossingFirstMs / 1000.0);
+
+        _beatFreqHz -= _phasePID.process(expectedZeroCrossingSecs, sampleTimeMs/1000.0, 1) * 0.1;
+
+#endif
+        printf(" beatFreq %f\n", _beatFreqHz);
     }
 
     uint32_t timeToNextPeakMs(uint32_t curTimeMs)
     {
+        // // Interval in ms between zero crossings
+        // uint32_t intervalMs = 1000 / _beatFreqHz;
+        // // Time in ms since last zero crossing
+        // uint32_t timeSinceLastZeroCrossingMs = curTimeMs - _zeroCrossingFirstMs;
+        // // Time to peak is assumed to be half the interval
+        // uint32_t timeSinceLastPeakMs = (timeSinceLastZeroCrossingMs + (intervalMs / 2)) % intervalMs;
+        // return intervalMs - timeSinceLastPeakMs;
+
         // Interval in ms between zero crossings
         uint32_t intervalMs = 1000 / _beatFreqHz;
-        // Time in ms since last zero crossing
-        uint32_t timeSinceLastZeroCrossingMs = curTimeMs - _zeroCrossingFirstMs;
-        // Time to peak is assumed to be half the interval
-        uint32_t timeSinceLastPeakMs = (timeSinceLastZeroCrossingMs + (intervalMs / 2)) % intervalMs;
-        return intervalMs - timeSinceLastPeakMs;
+        
+        // Time since last zero crossing
+        uint32_t timeSinceLastZeroMs = curTimeMs - _lastZeroCrossingMs;
+
+        // Time to next zero crossing
+        uint32_t timeToNextZeroMs = intervalMs - timeSinceLastZeroMs;
+
+        // Time to next peak is assumed to be quarter of the interval
+        uint32_t timeToNextPeakMs = (timeToNextZeroMs + (3 * intervalMs / 4)) % intervalMs;
+        return timeToNextPeakMs;
     }
 
     float getBeatFreqHz()
@@ -408,12 +514,16 @@ private:
     uint32_t _zeroCrossingFirstMs = 0;
     uint32_t _lastZeroCrossingMs = 0;
     // SimpleMovingAverage<50, int32_t, int64_t> _phase_error_ms;
+#ifdef MATCH_FREQUENCY
     PIDControl _frequencyPID;
+#else
+    PIDControl _phasePID;
+#endif
     float _maxFreqHz = 3.5;
     float _minFreqHz = 0.5;
 };
 
-PhaseLockedLoop phaseLockedLoop(3.5, 0.5, 0.1);
+PhaseLockedLoop phaseLockedLoop(3.5, 0.5, 10);
 
 // // IIR bandpass filter
 // std::vector<int> filterHRMData(std::vector<int> timestamps, std::vector<int> red_led_adc_values) {
@@ -425,12 +535,42 @@ PhaseLockedLoop phaseLockedLoop(3.5, 0.5, 0.1);
 //     return filtered_red_led_adc_values;
 // }
 
+// #define OVERRIDE_DATA_WITH_TEST_WAVEFORMS
+
 int main()
 {
     std::string logFilePath = "../../logs";
     std::string latestLogFile = findLatestLogFile(logFilePath);
     // Read file data
     auto [timestamps, red_led_adc_values] = readHRMData(latestLogFile);
+
+
+#ifdef OVERRIDE_DATA_WITH_TEST_WAVEFORMS
+
+    red_led_adc_values.clear();
+    // Create a 1Hz sine wave at 50 samples per second
+    float startFreqHz = 3;
+    float endFreqHz = 0.8;
+    const float sampleRateHz = 50.0;
+    float duration = (timestamps[timestamps.size()-1]-timestamps[0])/1000.0;
+    // float aFactor = 2 * M_PI * (maxFreqHz-minFreqHz) / sampleRateHz;
+    // float bFactor = 2 * M_PI * minFreqHz / sampleRateHz;
+    for (int i = 0; i < timestamps.size(); ++i)
+    {
+        float t = (timestamps[i]/1000.0);
+        float outVal = cos(2 * M_PI * (startFreqHz * t + (endFreqHz - startFreqHz) * t * t / (2 * duration)));
+        red_led_adc_values.push_back(1000 * outVal + 35000);
+        // if ((freqHz < 0.8) && (freqIncreaseRateHz < 0))
+        //     freqIncreaseRateHz = -freqIncreaseRateHz;
+        // else if ((freqHz > 2) && (freqIncreaseRateHz > 0))
+        //     freqIncreaseRateHz = -freqIncreaseRateHz;
+        // if (i % 100 == 0)
+        //     printf("%d %d Freq %fHz\n", timestamps[i], red_led_adc_values[i], freqHz);
+        if (i < 100)
+            printf("%d out %d t %f\n", timestamps[i], red_led_adc_values[i], t);
+    }
+#endif
+
 
     // Process data sequentially
     std::vector<int> filtered_red_led_adc_values;
@@ -444,7 +584,8 @@ int main()
     for (int i = 0; i < red_led_adc_values.size(); ++i)
     {
         // IIR bandpass filter
-        int filtered_sample = bpf.process(red_led_adc_values[i]);
+        int filtered_sample = lowPassFilter.process(red_led_adc_values[i]);
+        filtered_sample = highPassFilter.process(filtered_sample);
         filtered_red_led_adc_values.push_back(filtered_sample);
 
         // Zero crossing detector

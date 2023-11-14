@@ -13,6 +13,9 @@
 
 static const char *MODULE_PREFIX = "Jewelry";
 
+// TODO TURN OFF
+#define USE_PIN_FOR_DEBUG 9
+
 Jewelry::Jewelry(const char *pModuleName, ConfigBase &defaultConfig, ConfigBase *pGlobalConfig, ConfigBase *pMutableConfig) :
     SysModBase(pModuleName, defaultConfig, pGlobalConfig, pMutableConfig)
 {
@@ -44,17 +47,57 @@ void Jewelry::setup()
     // // Setup power control
     // _powerControl.setup(configGetConfig(), "PowerControl");
 
+    // Setup LED heart
+    _ledHeart.setup(configGetConfig(), "LEDHeart");
+
     // Setup I2C
     _i2cCentral.init(0, _sdaPin, _sclPin, _freq);
 
     // Setup MAX30101
     _max30101.setup(configGetConfig(), "MAX30101", &_i2cCentral);
+
+    // Debug
+#ifdef USE_PIN_FOR_DEBUG
+    pinMode(USE_PIN_FOR_DEBUG, OUTPUT);
+    digitalWrite(USE_PIN_FOR_DEBUG, LOW);
+#endif
 }
 
 void Jewelry::service()
 {
     // Service MAX30101
     _max30101.service();
+
+    // Handle heart animation
+    bool heartAnimationRequired = Raft::isTimeout(millis(), _lastHeartPulseTimeMs, _timeBetweenHeartPulsesMs);
+    if (heartAnimationRequired)
+    {
+        // Start pulse animation
+        _ledHeart.startPulseAnimation();
+        _lastHeartPulseTimeMs = millis();
+        while (true)
+        {
+            // Service heart LEDs
+            _ledHeart.service();
+
+            // Get time to next animation step
+            // UINT32_MAX means that animation has finished
+            uint32_t timeToNextAnimStepUs = _ledHeart.getTimeToNextAnimStepUs();
+            if (timeToNextAnimStepUs == UINT32_MAX)
+                break;
+
+            // TODO - change this to light sleep
+            // Delay for time to next animation step
+    
+#ifdef USE_PIN_FOR_DEBUG
+            digitalWrite(USE_PIN_FOR_DEBUG, HIGH);
+#endif
+            delayMicroseconds(timeToNextAnimStepUs);
+#ifdef USE_PIN_FOR_DEBUG
+            digitalWrite(USE_PIN_FOR_DEBUG, LOW);
+#endif
+        }
+    }
 
     // // Service power control
     // _powerControl.service();

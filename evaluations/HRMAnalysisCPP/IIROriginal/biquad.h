@@ -50,6 +50,24 @@ public:
     	coef_size_t d0;
     } tp_coeffs;
 
+    // Set coefficients
+    void set_coefficients(tp_coeffs coeffs)
+    {
+    	m_coeffs.a0 = coeffs.a0;
+    	m_coeffs.a1 = coeffs.a1;
+    	m_coeffs.a2 = coeffs.a2;
+    	m_coeffs.b1 = coeffs.b1;
+    	m_coeffs.b2 = coeffs.b2;
+    	m_coeffs.c0 = coeffs.c0;
+    	m_coeffs.d0 = coeffs.d0;
+    }
+
+    // Get coefficients
+    tp_coeffs get_coefficients(void)
+    {
+    	return(m_coeffs);
+    }
+
 protected:
     coef_size_t m_xnz1, m_xnz2, m_ynz1, m_ynz2, m_offset;
     tp_coeffs m_coeffs;

@@ -373,8 +373,9 @@ extern "C" void app_main(void)
     // Loop forever
     while (1)
     {
-        // Yield for 1 tick
-        vTaskDelay(1);
+        // Yield
+        // vTaskDelay(1);
+        taskYIELD();
 
         // Service all the system modules
         _sysManager.service();
