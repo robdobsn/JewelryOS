@@ -28,6 +28,15 @@ public:
     // Get voltage
     float getVoltageFromADCReading(uint32_t adcReading);
 
+    // Check if shutdown initiated
+    bool isShutdownRequested()
+    {
+        return _shutdownInitiated;
+    }
+
+    // Handle shutdown
+    void shutdown();
+
 private:
 
     // VSENSE threshold when button is pressed
@@ -63,7 +72,11 @@ private:
 
     // Debounce button
     bool _buttonPressed = false;
-    uint32_t _buttonPressedTimeMs = 0;
+    uint32_t _buttonPressChangeTimeMs = 0;
+    uint32_t _buttonPressDownTimeMs = 0;
+
+    // Off time threshold for button press ms
+    static constexpr uint32_t BUTTON_OFF_TIME_THRESHOLD_MS = 2000;
 
     // Debug
     uint32_t _lastDebugTimeMs = 0;

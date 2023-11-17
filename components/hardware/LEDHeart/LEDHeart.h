@@ -60,11 +60,12 @@ private:
 
     // Animation step levels
     static const uint8_t OFF_LEVEL = 0;
-    static const uint8_t MID_LEVEL = 1;
-    static const uint8_t HIGH_LEVEL = 2;
+    static const uint8_t LOW_LEVEL = 1;
+    static const uint8_t MID_LEVEL = 2;
+    static const uint8_t HIGH_LEVEL = 3;
     std::vector<uint8_t> _animationStepLevels = 
     {
-        MID_LEVEL, HIGH_LEVEL, MID_LEVEL, OFF_LEVEL
+        LOW_LEVEL, MID_LEVEL, HIGH_LEVEL, MID_LEVEL, LOW_LEVEL, OFF_LEVEL
     };
 
     // Animation level count

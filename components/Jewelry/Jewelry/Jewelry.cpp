@@ -14,7 +14,13 @@
 static const char *MODULE_PREFIX = "Jewelry";
 
 // TODO TURN OFF
-#define USE_PIN_FOR_DEBUG 9
+// #define USE_PIN_FOR_DEBUG 9
+
+// The following stops the power control function keeping the board alive
+// #define DISABLE_POWER_CONTROL
+
+// The following allows disabling of animations
+#define DISABLE_ANIMATIONS
 
 Jewelry::Jewelry(const char *pModuleName, ConfigBase &defaultConfig, ConfigBase *pGlobalConfig, ConfigBase *pMutableConfig) :
     SysModBase(pModuleName, defaultConfig, pGlobalConfig, pMutableConfig)
@@ -44,8 +50,10 @@ void Jewelry::setup()
         return;
     }
 
-    // // Setup power control
-    // _powerControl.setup(configGetConfig(), "PowerControl");
+#ifndef DISABLE_POWER_CONTROL
+    // Setup power control
+    _powerControl.setup(configGetConfig(), "PowerControl");
+#endif
 
     // Setup LED heart
     _ledHeart.setup(configGetConfig(), "LEDHeart");
@@ -68,6 +76,7 @@ void Jewelry::service()
     // Service MAX30101
     _max30101.service();
 
+#ifndef DISABLE_ANIMATIONS
     // Handle heart animation
     bool heartAnimationRequired = Raft::isTimeout(millis(), _lastHeartPulseTimeMs, _timeBetweenHeartPulsesMs);
     if (heartAnimationRequired)
@@ -98,9 +107,35 @@ void Jewelry::service()
 #endif
         }
     }
+#endif
 
-    // // Service power control
-    // _powerControl.service();
+#ifndef DISABLE_POWER_CONTROL
+    // Service power control
+    _powerControl.service();
+
+    // Check for shutdown
+    if (_powerControl.isShutdownRequested())
+    {
+        // Debug
+        LOG_I(MODULE_PREFIX, "service shutdown requested");
+        delay(100);
+
+        // Shutdown MAX30101
+        _max30101.shutdown();
+
+        // Shutdown
+        _powerControl.shutdown();
+    }
+#endif
+
+#ifdef STORE_SAMPLES_FOR_DATA_COLLECTION
+    // Service data collection if enabled
+    String samplesJSON = _max30101.getLastSamplesJSON();
+    if (samplesJSON.length() > 0)
+    {
+        sysModSendCmdJSON("HRMSamples", samplesJSON.c_str());
+    }
+#endif
 
     // TODO remove
 

@@ -32,6 +32,17 @@
                 "CtrlEscape":"0xD7"
             }
         },
+        "NetMan": {
+            "wifiSTAEn": 1,
+            "wifiAPEn": 0,
+            "ethEn": 0,
+            "wifiSSID": "rdint01",
+            "wifiPW": "golgofrinsham",
+            "wifiSTAScanThreshold": "OPEN",
+            "NTPServer": "pool.ntp.org",
+            "timezone": "UTC",
+            "logLevel": "D"
+        },
         "Jewelry": {
             "LEDHeart": {
                 "ledPins": [6,1,3,5],
@@ -52,6 +63,47 @@
             },
             "powerCtrlPin": 7,
             "vsensePin": 4
+        },
+        "WebServer": {
+            "enable": 1,
+            "webServerPort": 80,
+            "stdRespHeaders": [
+                "Access-Control-Allow-Origin: *"
+            ],
+            "apiPrefix": "api/",
+            "fileServer": 1,
+            "numConnSlots": 12,
+            "websockets": [
+                {
+                    "pfix": "ws",
+                    "pcol": "RICSerial",
+                    "maxConn": 4,
+                    "txQueueMax": 20,
+                    "pingMs": 30000
+                },
+                {
+                    "pfix": "scader",
+                    "pcol": "RICJSON",
+                    "maxConn": 4,
+                    "txQueueMax": 20,
+                    "pingMs": 30000,
+                    "content": "text"
+                }
+            ],
+            "logLevel": "D",
+            "sendMax": 5000,
+            "taskCore": 0,
+            "taskStack": 5000,
+            "taskPriority": 9
+        },
+        "SerialConsole": {
+            "enable": 1,
+            "uartNum": 0,
+            "rxBuf": 5000,
+            "txBuf": 1500,
+            "crlfOnTx": 1,
+            "protocol": "RICSerial",
+            "logLevel": "D"
         }
     }
 ]

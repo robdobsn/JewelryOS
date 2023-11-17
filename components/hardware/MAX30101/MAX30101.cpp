@@ -16,6 +16,7 @@ static const char *MODULE_PREFIX = "MAX30101";
 
 // #define DEBUG_POLL_RESULT
 #define DEBUG_HW_SETUP
+// #define DEBUG_FIFO_DATA
 #define WARN_ON_HW_SETUP_FAILURE
 
 #define HANDLE_FIFO_FULL_ON_SERVICE_LOOP
@@ -84,6 +85,20 @@ void MAX30101::setup(ConfigBase& config, const char* pConfigPrefix, RaftI2CCentr
 
     // Set initialisation time
     _lastInitAttemptTimeMs = millis();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Shutdown
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MAX30101::shutdown()
+{
+    // Check initialised
+    if (!_isInitialised)
+        return;
+
+    // Write shutdown code to mode register
+    writeRegister(MAX30101_REG_MODE_CONFIG, MAX30101_VAL_SHUTDOWN_HRM);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,17 +212,24 @@ void MAX30101::service()
             }
 
             // Output data
-            String debugStr;
-            debugStr.reserve(200);
+#if defined(STORE_SAMPLES_FOR_DATA_COLLECTION) || defined(DEBUG_FIFO_DATA)
+            _lastSamplesJSON.reserve(200);
+            _lastSamplesJSON = "{\"s\":[";
             for (uint32_t i = 0; i < numSamples; i++)
             {
-                debugStr += String(samples[i]) + " ";
+                if (i != 0)
+                    _lastSamplesJSON += ",";
+                _lastSamplesJSON += String(samples[i]);
             }
+            _lastSamplesJSON += "]}";
+#ifdef DEBUG_FIFO_DATA
             LOG_I(MODULE_PREFIX, "service i2cAddr 0x%x sampleRate %.1f/s numSamples %d writePtr %d readPtr %d samples %s", 
                         (int)_i2cAddr, 
                         convSampleRateAndAverageToHz(_sampleRate, _sampleAverage),
                         (int)numSamples, (int)writePtr, (int)readPtr,
-                        debugStr.c_str());
+                        _lastSamplesJSON.c_str());
+#endif
+#endif
         }
     }
 #endif

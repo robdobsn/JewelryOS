@@ -16,6 +16,8 @@ class RaftI2CCentralIF;
 class ConfigBase;
 class BusRequestResult;
 
+#define STORE_SAMPLES_FOR_DATA_COLLECTION
+
 class MAX30101
 {
 public:
@@ -36,6 +38,19 @@ public:
     {
         return _i2cAddr;
     }
+
+    // Shutdown
+    void shutdown();
+
+    // Get last samples JSON
+#ifdef STORE_SAMPLES_FOR_DATA_COLLECTION
+    String getLastSamplesJSON()
+    {
+        String tmpStr = _lastSamplesJSON;
+        _lastSamplesJSON = "";
+        return tmpStr;
+    }
+#endif
 
 private:
     // MAX30101 Address and Registers
@@ -274,6 +289,11 @@ private:
     // void getTemperatureResultCallback(BusRequestResult& reqResult);
     // static void getHwRevCallbackStatic(void* pCallbackData, BusRequestResult& reqResult);
     // void getHwRevCallback(BusRequestResult& reqResult);
+
+    // Store samples for data collection
+#ifdef STORE_SAMPLES_FOR_DATA_COLLECTION
+    String _lastSamplesJSON;
+#endif
 
     // Helpers
     bool writeRegister(uint8_t regNum, uint8_t regVal);

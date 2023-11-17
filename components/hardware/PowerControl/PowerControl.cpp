@@ -58,19 +58,36 @@ void PowerControl::service()
         // will go above a threshold
         if (vsenseVal > VSENSE_BUTTON_PRESSED_THRESHOLD)
         {
+            // Note time press started
+            if (!_buttonPressed)
+                _buttonPressDownTimeMs = millis();
+
             // Pressed
             _buttonPressed = true;
-            _buttonPressedTimeMs = millis();
+            _buttonPressChangeTimeMs = millis();
+
+            // Check if button press is over the off time threshold
+            if (Raft::timeElapsed(millis(), _buttonPressDownTimeMs) > BUTTON_OFF_TIME_THRESHOLD_MS)
+            {
+                // Debug
+                LOG_I(MODULE_PREFIX, "Button pressed for %dms - shutting down",
+                        (int)Raft::timeElapsed(millis(), _buttonPressDownTimeMs));
+                delay(200);
+
+                // Shutdown initiated
+                _shutdownInitiated = true;
+            }
         }
         else
         {
             // Not pressed - debounce
             if (_buttonPressed)
             {
-                if (Raft::isTimeout(millis(), _buttonPressedTimeMs, 200))
+                if (Raft::isTimeout(millis(), _buttonPressChangeTimeMs, 200))
                 {
                     // Button pressed
-                    LOG_I(MODULE_PREFIX, "Button pressed and released");
+                    LOG_I(MODULE_PREFIX, "Button pressed for %dms and released",
+                            (int)Raft::timeElapsed(millis(), _buttonPressDownTimeMs));
                     _buttonPressed = false;
                 }
             }
@@ -108,13 +125,6 @@ void PowerControl::service()
 
             // Shutdown initiated
             _shutdownInitiated = true;
-
-            // Shutdown
-            digitalWrite(_powerCtrlPin, LOW);
-
-            // Enter light sleep with no wakeup
-            esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
-            esp_light_sleep_start();
         }
     }
 }
@@ -126,4 +136,19 @@ void PowerControl::service()
 float PowerControl::getVoltageFromADCReading(uint32_t adcReading)
 {
     return (float)adcReading / VSENSE_TO_VOLTAGE;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Shutdown
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void PowerControl::shutdown()
+{
+    // Shutdown
+    digitalWrite(_powerCtrlPin, LOW);
+    delay(500);
+
+    // Enter light sleep with no wakeup
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+    esp_light_sleep_start();
 }

@@ -77,6 +77,7 @@ static const char* MODULE_NAME = "MainTask";
 // #define DEBUG_SHOW_RUNTIME_STATS
 // #define DEBUG_HEAP_ALLOCATION
 // #define DEBUG_TIMING_OF_STARTUP
+#define COLLECT_DATA_SAMPLES_WIRELESSLY
 
 #ifdef CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
 #ifdef DEBUG_SHOW_TASK_INFO
@@ -120,54 +121,24 @@ static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in 
 // Jewelry
 #include "Jewelry.h"
 
-// #include <CommsChannelManager.h>
-// #include <SerialConsole.h>
-// #include <FileManager.h>
-// #ifdef CONFIG_BT_ENABLED
-// #include <BLEManager.h>
-// #endif
-// #ifdef FEATURE_NETWORK_FUNCTIONALITY
-// #include <NetworkManager.h>
-// #ifdef FEATURE_WEB_SERVER_OR_WEB_SOCKETS
-// #include <WebServer.h>
-// #endif
-// #endif
-// #include <CommandSerial.h>
-// #include <CommandSocket.h>
-// #include <CommandFile.h>
-// #include <StatePublisher.h>
+#ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
+#include "SampleCollectorJSON.h"
+#include <CommsChannelManager.h>
+#include <SerialConsole.h>
+#include <FileManager.h>
+#include <NetworkManager.h>
+#include <WebServer.h>
 // #include <LogManager.h>
-
 // #include <FileSystem.h>
 // #include <ESPOTAUpdate.h>
 // #include <ProtocolExchange.h>
-
-// // #include <BusSerial.h>
 // #include <MQTTManager.h>
-
-// // #ifdef FEATURE_HWELEM_STEPPERS
-// // #include <HWElemSteppers.h>
-// // #endif
-
-// // #ifdef FEATURE_POWER_UP_LED_ASAP
-// // #include <PowerUpLEDSet.h>
-// // #endif
-
-// // #ifdef FEATURE_EMBED_MICROPYTHON
-// // #include "MicropythonRICIF.h"
-// // #endif
-
-// #ifdef FEATURE_INCLUDE_SCADER
-// // Scader components
-// #include "ScaderRelays.h"
-// #include "ScaderShades.h"
-// #include "ScaderDoors.h"
-// #include "ScaderOpener.h"
-// // #include "ScaderCat.h"
-// #include "ScaderLEDPixels.h"
-// #include "ScaderRFID.h"
-// // #include "ScaderWaterer.h"
-// #endif
+// #include <StatePublisher.h>
+// #include <CommandSerial.h>
+// #include <CommandSocket.h>
+// #include <CommandFile.h>
+// #include <BLEManager.h>
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Standard Entry Point
@@ -235,11 +206,6 @@ extern "C" void app_main(void)
     // Configuration for system modules
     ConfigNVS _sysTypeConfig("sys", 10000);
 
-#ifdef FEATURE_INCLUDE_SCADER
-    // Configuration for Scader
-    ConfigNVS _scaderMutableConfig("scader", 4000);
-#endif
-
     ///////////////////////////////////////////////////////////////////////////////////
 
     // SysTypes
@@ -254,59 +220,44 @@ extern "C" void app_main(void)
     // Add the system restart callback to the SysTypeManager
     _sysTypeManager.setSystemRestartCallback([&_sysManager] { (&_sysManager)->systemRestart(); });
 
-    // Set up the hardware
-    Jewelry _jewelry("Jewelry", defaultSystemConfig, &_sysTypeConfig, nullptr);
-
-// #ifdef FEATURE_INCLUDE_ROBOT_CONTROLLER
-//     // Robot Controller
-//     RobotController _robotController("RobotCtrl", defaultSystemConfig, &_sysTypeConfig, &_robotMutableConfig,
-//                 "Robot", &_addOnMutableConfig);
-//     // Register serial bus
-//     _robotController.busRegister("serial", BusSerial::createFn);
-//     // Register HWElemTypes
-//     _robotController.hwElemRegister("I2SOut", HWElemAudioOut::createFn);
-//     _robotController.hwElemRegister("GPIO", HWElemGPIO::createFn);
-// #ifdef FEATURE_HWELEM_STEPPERS
-//     _robotController.hwElemRegister("Steppers", HWElemSteppers::createFn);
-// #endif
-// #endif
-
     // API Endpoints
     RestAPIEndpointManager _restAPIEndpointManager;
     _sysManager.setRestAPIEndpoints(_restAPIEndpointManager);
 
-//     // Comms Channel Manager
-//     CommsChannelManager _commsChannelManager("CommsMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
-//     _sysManager.setCommsCore(&_commsChannelManager);
+    // Set up the hardware
+    Jewelry _jewelry("Jewelry", defaultSystemConfig, &_sysTypeConfig, nullptr);
 
-//     // SerialConsole
-//     SerialConsole _serialConsole("SerialConsole", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    // Sample collector
+#ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
+    SampleCollectorJSON _sampleCollector("HRMSamples", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    _sampleCollector.setSamplingInfo(0, 4000, "{\"name\":\"hrmdata\"}", "hrmsamples", true, false);
 
-//     // FileManager
-//     FileManager _fileManager("FileManager", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    // Comms Channel Manager
+    CommsChannelManager _commsChannelManager("CommsMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    _sysManager.setCommsCore(&_commsChannelManager);
 
-// #ifdef FEATURE_NETWORK_FUNCTIONALITY
-//     // NetworkManager
-//     NetworkManager _networkManager("NetMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
-// #endif
+    // SerialConsole
+    SerialConsole _serialConsole("SerialConsole", defaultSystemConfig, &_sysTypeConfig, nullptr);
+
+    // FileManager
+    FileManager _fileManager("FileManager", defaultSystemConfig, &_sysTypeConfig, nullptr);
+
+    // NetworkManager
+    NetworkManager _networkManager("NetMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
+
+    // ProtocolExchange
+    ProtocolExchange _protocolExchange("ProtExchg", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    _fileManager.setProtocolExchange(_protocolExchange);
+
+    // WebServer
+    WebServer _webServer("WebServer", defaultSystemConfig, &_sysTypeConfig, nullptr);
 
 //     // ESP OTA Update
 //     ESPOTAUpdate _espotaUpdate("ESPOTAUpdate", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    // _protocolExchange.setHandlers(&_espotaUpdate);
 
-//     // ProtocolExchange
-//     ProtocolExchange _protocolExchange("ProtExchg", defaultSystemConfig, &_sysTypeConfig, nullptr);
-//     _protocolExchange.setHandlers(&_espotaUpdate);
-//     _fileManager.setProtocolExchange(_protocolExchange);
-
-// #ifdef FEATURE_WEB_SERVER_OR_WEB_SOCKETS
-//     // WebServer
-//     WebServer _webServer("WebServer", defaultSystemConfig, &_sysTypeConfig, nullptr);
-// #endif
-
-// #ifdef CONFIG_BT_ENABLED
 //     // BLEManager
 //     BLEManager _bleManager("BLEMan", defaultSystemConfig, &_sysTypeConfig, nullptr, DEFAULT_ADVNAME);
-// #endif
 
 //     // Command Serial
 //     CommandSerial _commandSerial("CommandSerial", defaultSystemConfig, &_sysTypeConfig, nullptr);
@@ -325,26 +276,7 @@ extern "C" void app_main(void)
 
     // Log manager
     // LogManager _LogManager("LogManager", defaultSystemConfig, &_sysTypeConfig, &_sysModMutableConfig);
-    
-// #ifdef FEATURE_EMBED_MICROPYTHON
-//     // Micropython
-//     MicropythonRICIF _micropythonRICIF("uPy", defaultSystemConfig, &_sysTypeConfig, nullptr);
-// #endif
-
-// #ifdef FEATURE_INCLUDE_SCADER
-//     // Scader components
-//     ScaderRelays _scaderRelays("ScaderRelays", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-//     ScaderShades _scaderShades("ScaderShades", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-//     ScaderDoors _scaderDoors("ScaderDoors", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-//     ScaderOpener _scaderOpener("ScaderOpener", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-//     // // ConfigBase cfg;
-//     // // ScaderOpener _scaderOpener("ScaderOpener", cfg, nullptr, &_scaderMutableConfig);
-//     // // _scaderOpener.setup();
-//     // // ScaderCat _scaderCat("ScaderCat", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-//     ScaderLEDPixels _scaderLEDPixels("ScaderLEDPix", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-//     ScaderRFID _scaderRFID("ScaderRFID", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-//     // ScaderWaterer _scaderWaterer("ScaderWaterer", defaultSystemConfig, &_sysTypeConfig, &_scaderMutableConfig);
-// #endif
+#endif    
 
     // Log out system info
     ESP_LOGI(MODULE_NAME, SYSTEM_NAME " " SYSTEM_VERSION " (built " __DATE__ " " __TIME__ ") Heap %d", 
@@ -357,18 +289,16 @@ extern "C" void app_main(void)
     // before file system ones
     _sysManager.setup();
 
-// #ifdef FEATURE_WEB_SERVER_STATIC_FILES
-//     // Web server add files
-//     String servePaths = String("/=/") + fileSystem.getDefaultFSRoot();
-//     servePaths += ",/files/local=/local";
-//     servePaths += ",/files/sd=/sd";
-//     _webServer.serveStaticFiles(servePaths.c_str());
-// #endif
+#ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
+    // Web server add files
+    String servePaths = String("/=/") + fileSystem.getDefaultFSRoot();
+    servePaths += ",/files/local=/local";
+    servePaths += ",/files/sd=/sd";
+    _webServer.serveStaticFiles(servePaths.c_str());
 
-// #ifdef FEATURE_WEB_SERVER_OR_WEB_SOCKETS
-//     // Start webserver
-//     _webServer.beginServer();
-// #endif
+    // Start webserver
+    _webServer.beginServer();
+#endif
 
     // Loop forever
     while (1)

@@ -7,10 +7,10 @@ add_compile_definitions(HW_SERIAL_NUMBER_BYTES=16)
 add_compile_definitions(HW_SERIAL_SET_MAGIC_STR=Magic)
 
 # Main features
-# add_compile_definitions(FEATURE_NETWORK_FUNCTIONALITY)
-# add_compile_definitions(FEATURE_WEB_SERVER_OR_WEB_SOCKETS)
-# add_compile_definitions(FEATURE_WEB_SOCKETS)
-# add_compile_definitions(FEATURE_WEB_SERVER_STATIC_FILES)
+add_compile_definitions(FEATURE_NETWORK_FUNCTIONALITY)
+add_compile_definitions(FEATURE_WEB_SERVER_OR_WEB_SOCKETS)
+add_compile_definitions(FEATURE_WEB_SOCKETS)
+add_compile_definitions(FEATURE_WEB_SERVER_STATIC_FILES)
 # add_compile_definitions(FEATURE_MQTT_MANAGER)
 #add_compile_definitions(FEATURE_BLE_FUNCTIONALITY)
 

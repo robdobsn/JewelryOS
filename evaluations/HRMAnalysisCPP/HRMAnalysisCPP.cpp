@@ -16,6 +16,7 @@
 #include <math.h>
 
 #define MATCH_FREQUENCY
+#define READ_FROM_HRM_WIFI_LOG_FILE
 
 std::string findLatestLogFile(const std::string &logFilePath)
 {
@@ -539,11 +540,27 @@ PhaseLockedLoop phaseLockedLoop(3.5, 0.5, 10);
 
 int main()
 {
+#ifdef READ_FROM_HRM_WIFI_LOG_FILE
+    // File name
+    std::string latestLogFile = "../HRMReadOverWifi/HRMReadOverWifi.txt";
+    std::vector<int> timestamps;
+    std::vector<int> red_led_adc_values;
+    // Read file data - single column of numbers read into red_led_adc_values
+    std::ifstream file(latestLogFile);
+    std::string line;
+    int time_ms = 0;
+    while (std::getline(file, line))
+    {
+        red_led_adc_values.push_back(std::stoi(line));
+        timestamps.push_back(time_ms);
+        time_ms += 20;
+    }
+#else
     std::string logFilePath = "../../logs";
     std::string latestLogFile = findLatestLogFile(logFilePath);
     // Read file data
     auto [timestamps, red_led_adc_values] = readHRMData(latestLogFile);
-
+#endif
 
 #ifdef OVERRIDE_DATA_WITH_TEST_WAVEFORMS
 
