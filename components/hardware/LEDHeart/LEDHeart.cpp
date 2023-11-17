@@ -159,9 +159,6 @@ void LEDHeart::handleAnimationStep()
                 digitalWrite(_ledPins[ledIdx], animOffTimeUs != 0 ? _ledActiveLevel : !_ledActiveLevel);
                 _animationOffAfterUs[ledIdx] = animOffTimeUs;
 
-                // delayMicroseconds(10);
-                // digitalWrite(_ledPins[ledIdx], !_ledActiveLevel);
-
                 // LOG_I(MODULE_PREFIX, "handleAnimationStep setLedOn ledIdx %d animStepIdx %d offTimeMs %d", 
                 //         ledIdx, animStepIdx, _animationOffAfterMs[ledIdx]);
             }

@@ -37,7 +37,7 @@ public:
         filteredSample = _highPassFilter.process(filteredSample);
         
         // Zero crossing detector
-        bool isZeroCrossing = _zeroCrossingDetector.process(filteredSample, sampleTimeMs);
+        bool isZeroCrossing = _zeroCrossingDetector.process(filteredSample);
 
         // Phase locked loop
         if (isZeroCrossing)

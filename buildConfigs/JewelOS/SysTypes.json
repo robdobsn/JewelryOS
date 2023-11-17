@@ -56,10 +56,12 @@
                 "i2cAddr": 87,
                 "redLedIntensity": "0x1f",
                 "sampleAverage": 8,
-                "sampleRate": 400,
-                "pulseWidth": 411,
+                "sampleRateHz": 400,
+                "pulseWidthUs": 411,
                 "adcRange": 4096,
-                "fifoAlmostFullThreshold": 31
+                "fifoAlmostFullThreshold": 31,
+                "fifoFullPin": 0,
+                "wakeupOnFifoFull": true
             },
             "powerCtrlPin": 7,
             "vsensePin": 4

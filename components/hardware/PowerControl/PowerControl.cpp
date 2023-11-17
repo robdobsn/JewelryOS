@@ -146,7 +146,7 @@ void PowerControl::shutdown()
 {
     // Shutdown
     digitalWrite(_powerCtrlPin, LOW);
-    delay(500);
+    delay(TIME_TO_HOLD_POWER_CTRL_PIN_LOW_MS);
 
     // Enter light sleep with no wakeup
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);

@@ -17,10 +17,17 @@ static const char *MODULE_PREFIX = "Jewelry";
 // #define USE_PIN_FOR_DEBUG 9
 
 // The following stops the power control function keeping the board alive
-// #define DISABLE_POWER_CONTROL
+#define ENABLE_POWER_CONTROL
 
 // The following allows disabling of animations
-#define DISABLE_ANIMATIONS
+// #define ENABLE_ANIMATIONS
+
+// The following disables sleeping
+// #define ENABLE_SLEEP_MODE
+
+///////////////////////////////////////////////////////////////////////////////
+// Constructor / Destructor
+///////////////////////////////////////////////////////////////////////////////
 
 Jewelry::Jewelry(const char *pModuleName, ConfigBase &defaultConfig, ConfigBase *pGlobalConfig, ConfigBase *pMutableConfig) :
     SysModBase(pModuleName, defaultConfig, pGlobalConfig, pMutableConfig)
@@ -30,6 +37,10 @@ Jewelry::Jewelry(const char *pModuleName, ConfigBase &defaultConfig, ConfigBase 
 Jewelry::~Jewelry()
 {
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Setup
+///////////////////////////////////////////////////////////////////////////////
 
 void Jewelry::setup()
 {
@@ -50,7 +61,7 @@ void Jewelry::setup()
         return;
     }
 
-#ifndef DISABLE_POWER_CONTROL
+#ifdef ENABLE_POWER_CONTROL
     // Setup power control
     _powerControl.setup(configGetConfig(), "PowerControl");
 #endif
@@ -71,12 +82,16 @@ void Jewelry::setup()
 #endif
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Service
+///////////////////////////////////////////////////////////////////////////////
+
 void Jewelry::service()
 {
     // Service MAX30101
     _max30101.service();
 
-#ifndef DISABLE_ANIMATIONS
+#ifdef ENABLE_ANIMATIONS
     // Handle heart animation
     bool heartAnimationRequired = Raft::isTimeout(millis(), _lastHeartPulseTimeMs, _timeBetweenHeartPulsesMs);
     if (heartAnimationRequired)
@@ -95,9 +110,12 @@ void Jewelry::service()
             if (timeToNextAnimStepUs == UINT32_MAX)
                 break;
 
-            // TODO - change this to light sleep
+#ifdef ENABLE_SLEEP_MODE
+            // Sleep for time to next animation step
+            esp_sleep_enable_timer_wakeup(timeToNextAnimStepUs);
+            esp_light_sleep_start();
+#else // ENABLE_SLEEP_MODE
             // Delay for time to next animation step
-    
 #ifdef USE_PIN_FOR_DEBUG
             digitalWrite(USE_PIN_FOR_DEBUG, HIGH);
 #endif
@@ -105,11 +123,37 @@ void Jewelry::service()
 #ifdef USE_PIN_FOR_DEBUG
             digitalWrite(USE_PIN_FOR_DEBUG, LOW);
 #endif
+#endif // ENABLE_SLEEP_MODE
         }
     }
 #endif
 
-#ifndef DISABLE_POWER_CONTROL
+    // Check if wakeup on HRM FIFO full is enabled
+    if (_max30101.isWakeupOnFifoFullEnabled())
+    {
+#ifdef ENABLE_SLEEP_MODE
+        // Set wakeup timer to worst case time
+        esp_sleep_enable_timer_wakeup(100000);
+
+        // Set to wakeup on GPIO pins (already setup in MAX30101 hardware init)
+        esp_sleep_enable_gpio_wakeup();
+        esp_light_sleep_start();
+#endif
+    }
+
+    // Handle new HRM data
+    uint16_t hrmValue = 0;
+    uint32_t sampleTimeMs = 0;
+    while(_max30101.getSample(hrmValue, sampleTimeMs))
+    {
+        // Debug
+        // LOG_I(MODULE_PREFIX, "service hrmValue %d timeMs %d", hrmValue, sampleTimeMs);
+
+        // Process HRM value
+        _hrmAnalysis.process(hrmValue, sampleTimeMs);
+    }
+
+#ifdef ENABLE_POWER_CONTROL
     // Service power control
     _powerControl.service();
 
@@ -122,6 +166,9 @@ void Jewelry::service()
 
         // Shutdown MAX30101
         _max30101.shutdown();
+
+        // Turn off I2C
+        _i2cCentral.deinit();
 
         // Shutdown
         _powerControl.shutdown();

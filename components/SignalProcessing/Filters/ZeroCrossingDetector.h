@@ -19,13 +19,13 @@ public:
     ~ZeroCrossingDetector()
     {
     }
-    bool process(int sample, int sampleTimeMs)
+    bool process(int sample)
     {
         // Check for first sample
-        if (_lastSampleTimeMs == 0)
+        if (_isFirstSample)
         {
             _lastSample = sample;
-            _lastSampleTimeMs = sampleTimeMs;
+            _isFirstSample = false;
             return false;
         }
 
@@ -39,12 +39,11 @@ public:
         // Store last sample
         _lastSampleWasPositive = sample >= 0;
         _lastSample = sample;
-        _lastSampleTimeMs = sampleTimeMs;
         return result;
     }
 
 private:
     int _lastSample = 0;
-    int _lastSampleTimeMs = 0;
     bool _lastSampleWasPositive = false;
+    bool _isFirstSample = true;
 };

@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <vector>
 #include <RaftUtils.h>
+#include <ThreadSafeQueue.h>
 
 class RaftI2CCentralIF;
 class ConfigBase;
@@ -42,12 +43,26 @@ public:
     // Shutdown
     void shutdown();
 
+    // Check if wakeup on FIFO full enabled
+    bool isWakeupOnFifoFullEnabled()
+    {
+        return _wakeupOnFifoFull;
+    }
+
+    // Get sample from queue
+    bool getSample(uint16_t& hrmValue, uint32_t& sampleTimeMs)
+    {
+        sampleTimeMs = _lastSampleTimeMs;
+        _lastSampleTimeMs += _sampleIntervalMs;
+        return _sampleQueue.get(hrmValue, sampleTimeMs);
+    }
+
     // Get last samples JSON
 #ifdef STORE_SAMPLES_FOR_DATA_COLLECTION
     String getLastSamplesJSON()
     {
-        String tmpStr = _lastSamplesJSON;
-        _lastSamplesJSON = "";
+        String tmpStr = _debugLastSamplesJSON;
+        _debugLastSamplesJSON = "";
         return tmpStr;
     }
 #endif
@@ -133,22 +148,10 @@ private:
     // Default values
     static const uint32_t MAX30101_DEFAULT_RED_LED_INTENSITY = 0x1F;
     static const uint32_t MAX30101_DEFAULT_SAMPLE_AVERAGE = 8;
-    static const uint32_t MAX30101_DEFAULT_SAMPLE_RATE = 100;
+    static const uint32_t MAX30101_DEFAULT_SAMPLE_RATE_HZ = 100;
     static const uint32_t MAX30101_DEFAULT_FIFO_A_THRESHOLD = 31;
     static const uint32_t MAX30101_DEFAULT_ADC_RANGE = 4096;
     static const uint32_t MAX30101_DEFAULT_PULSE_WIDTH = 411;
-
-    // // MAX30101 Commands
-    // static const uint32_t MAX30101_BYTES_TO_READ_ = 2;
-    // static const uint32_t MAX30101_CONF_HYSTERESIS_BIT_POS = 2;
-    
-    // // Default poll rate
-    // static const uint32_t MAX30101_DEFAULT_POLL_RATE_PER_SEC = 1000;
-
-    // // Raw range and angle conversion factors
-    // static constexpr int32_t MAX30101_RAW_RANGE = 4096;
-    // static constexpr float MAX30101_ANGLE_CONVERSION_FACTOR_DEGREES = 360.0 / MAX30101_RAW_RANGE;
-    // static constexpr float MAX30101_ANGLE_CONVERSION_FACTOR_RADIANS = 2.0 * 3.14159265358979323846 / MAX30101_RAW_RANGE;
 
     // Convert sample average to code
     uint8_t convSampleAverageToCode(uint32_t sampleAverage)
@@ -166,9 +169,9 @@ private:
     }
     
     // Convert sample rate to code
-    uint8_t convSampleRateToCode(uint32_t sampleRate)
+    uint8_t convSampleRateHzToCode(uint32_t sampleRateHz)
     {
-        switch(sampleRate)
+        switch(sampleRateHz)
         {
             case 50: return MAX30101_REG_SMP_RATE_50;
             case 100: return MAX30101_REG_SMP_RATE_100;
@@ -183,7 +186,7 @@ private:
     }
 
     // Convert pulse width to code
-    uint8_t convPulseWidthToCode(uint32_t pulseWidth)
+    uint8_t convPulseWidthUsToCode(uint32_t pulseWidth)
     {
         switch(pulseWidth)
         {
@@ -238,11 +241,11 @@ private:
     // Sample average
     uint32_t _sampleAverage = MAX30101_DEFAULT_SAMPLE_AVERAGE;
 
-    // Sample rate
-    uint32_t _sampleRate = MAX30101_DEFAULT_SAMPLE_RATE;
+    // Sample rate Hz
+    uint32_t _sampleRateHz = MAX30101_DEFAULT_SAMPLE_RATE_HZ;
 
     // Pulse width
-    uint32_t _pulseWidth = MAX30101_REG_PULSE_WIDTH_411US;
+    uint32_t _pulseWidthUs = MAX30101_REG_PULSE_WIDTH_411US;
 
     // FIFO almost full threshold
     uint32_t _fifoAlmostFullThreshold = MAX30101_DEFAULT_FIFO_A_THRESHOLD;
@@ -250,11 +253,11 @@ private:
     // ADC range
     uint32_t _adcRange = MAX30101_DEFAULT_ADC_RANGE;
 
-    // // Poll rate / sec
-    // uint32_t _pollRatePerSec = MAX30101_DEFAULT_POLL_RATE_PER_SEC;
+    // FIFO full pin
+    int _fifoFullPin = -1;
 
-    // // Rotation direction reversed
-    // bool _rotationDirectionReversed = false;
+    // Wakeup on FIFO full
+    bool _wakeupOnFifoFull = false;
 
     // Is init
     bool _isInitialised = false;
@@ -268,32 +271,23 @@ private:
 
     // FIFO full check time
     uint32_t _fifoFullCheckTimeMs = 0;
-    static const uint32_t FIFO_CHECK_FULL_INTERVAL_MS = 500;
+    static const uint32_t MIN_FIFO_CHECK_FULL_INTERVAL_MS = 10;
+
+    // Sample times
+    uint32_t _lastSampleTimeMs = 0;
+    uint32_t _sampleIntervalMs = 20;
 
     // I2C Bus
     RaftI2CCentralIF* _pI2C = nullptr;
 
-    // // Numerical filter
-    // AngleMovingAverage<1, MAX30101_RAW_RANGE> _angleFilter;
-
-    // // Sample collector
-    // SampleCollector<int32_t>* _pSampleCollector = nullptr;
-
     // Debug
     uint32_t _debugLastShowTimeMs = 0;
 
-    // // Callbacks
-    // static void pollResultCallbackStatic(void* pCallbackData, BusRequestResult& reqResult);
-    // void pollResultCallback(BusRequestResult& reqResult);
-    // static void getTemperatureResultCallbackStatic(void* pCallbackData, BusRequestResult& reqResult);
-    // void getTemperatureResultCallback(BusRequestResult& reqResult);
-    // static void getHwRevCallbackStatic(void* pCallbackData, BusRequestResult& reqResult);
-    // void getHwRevCallback(BusRequestResult& reqResult);
+    // Queue of sample data
+    ThreadSafeQueue<uint16_t> _sampleQueue;
 
-    // Store samples for data collection
-#ifdef STORE_SAMPLES_FOR_DATA_COLLECTION
-    String _lastSamplesJSON;
-#endif
+    // Debug store JSON samples for data collection
+    String _debugLastSamplesJSON;
 
     // Helpers
     bool writeRegister(uint8_t regNum, uint8_t regVal);
