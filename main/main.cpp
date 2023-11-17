@@ -58,12 +58,12 @@ static const char *defaultConfigJSON =
 // Main task parameters
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-static const int MAIN_TASK_PRIORITY = 20;
-static const int PRO_TASK_PROCESSOR_CORE = 0;
-static const int MAIN_TASK_PROCESSOR_CORE = 1;
-static const int MAIN_TASK_STACK_SIZE = 16384;
-static TaskHandle_t mainTaskHandle = nullptr;
-extern void mainTask(void *pvParameters);
+// static const int MAIN_TASK_PRIORITY = 20;
+// static const int PRO_TASK_PROCESSOR_CORE = 0;
+// static const int MAIN_TASK_PROCESSOR_CORE = 1;
+// static const int MAIN_TASK_STACK_SIZE = 16384;
+// static TaskHandle_t mainTaskHandle = nullptr;
+// extern void mainTask(void *pvParameters);
 
 // Debug
 static const char* MODULE_NAME = "MainTask";
@@ -77,7 +77,7 @@ static const char* MODULE_NAME = "MainTask";
 // #define DEBUG_SHOW_RUNTIME_STATS
 // #define DEBUG_HEAP_ALLOCATION
 // #define DEBUG_TIMING_OF_STARTUP
-#define COLLECT_DATA_SAMPLES_WIRELESSLY
+// #define COLLECT_DATA_SAMPLES_WIRELESSLY
 
 #ifdef CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
 #ifdef DEBUG_SHOW_TASK_INFO

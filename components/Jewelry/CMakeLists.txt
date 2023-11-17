@@ -7,4 +7,5 @@ idf_component_register(
                   raftcore-src
                   rafti2c-src
                   hardware
+                  SignalProcessing
                 )

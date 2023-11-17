@@ -220,27 +220,27 @@ public:
     bool process(int sample, int sample_time)
     {
         // Check for first sample
-        if (_last_sample_time == 0)
+        if (_lastSampleTimeMs == 0)
         {
-            _last_sample = sample;
-            _last_sample_time = sample_time;
+            _lastSample = sample;
+            _lastSampleTimeMs = sample_time;
             return false;
         }
         bool result = false;
-        if (_last_sample_was_positive && sample < 0)
+        if (_lastSampleWasPositive && sample < 0)
         {
             result = true;
         }
-        _last_sample_was_positive = sample >= 0;
-        _last_sample = sample;
-        _last_sample_time = sample_time;
+        _lastSampleWasPositive = sample >= 0;
+        _lastSample = sample;
+        _lastSampleTimeMs = sample_time;
         return result;
     }
 
 private:
-    int _last_sample = 0;
-    int _last_sample_time = 0;
-    bool _last_sample_was_positive = false;
+    int _lastSample = 0;
+    int _lastSampleTimeMs = 0;
+    bool _lastSampleWasPositive = false;
 };
 
 ZeroCrossingDetector zero_crossing_detector;

@@ -14,6 +14,7 @@
 #include "BusI2CESPIDF.h"
 #include "PowerControl.h"
 #include "LEDHeart.h"
+#include "HRMAnalysis.h"
 
 class Jewelry : public SysModBase
 {
@@ -53,4 +54,7 @@ private:
 
     // LED heart display
     LEDHeart _ledHeart;
+
+    // HRM analysis
+    HRMAnalysis _hrmAnalysis;
 };
