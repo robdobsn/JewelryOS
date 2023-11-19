@@ -165,7 +165,8 @@ void MAX30101::service()
                 if (sampleValue > 0xffff)
                     sampleValue = 0xffff;
                 newSamples[i] = sampleValue;
-                _sampleQueue.put(sampleValue);
+                SampleData sampleData = {(uint16_t)sampleValue, millis() - _sampleIntervalMs * (numSamples - i - 1)};
+                _sampleQueue.put(sampleData);
             }
 
             // Output data
@@ -198,6 +199,7 @@ void MAX30101::initHardware()
     // Check if ready for init attempt
     if (!Raft::isTimeout(millis(), _lastInitAttemptTimeMs, 1000))
         return;
+    _lastInitAttemptTimeMs = millis();
 
     // Check phase of init
     if (!_lastInitAttemptWasReset)

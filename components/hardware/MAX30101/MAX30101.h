@@ -17,8 +17,6 @@ class RaftI2CCentralIF;
 class ConfigBase;
 class BusRequestResult;
 
-#define STORE_SAMPLES_FOR_DATA_COLLECTION
-
 class MAX30101
 {
 public:
@@ -52,20 +50,23 @@ public:
     // Get sample from queue
     bool getSample(uint16_t& hrmValue, uint32_t& sampleTimeMs)
     {
-        sampleTimeMs = _lastSampleTimeMs;
-        _lastSampleTimeMs += _sampleIntervalMs;
-        return _sampleQueue.get(hrmValue, sampleTimeMs);
+        SampleData sampleData;
+        bool isValid = _sampleQueue.get(sampleData);
+        if (isValid)
+        {
+            hrmValue = sampleData._hrmValue;
+            sampleTimeMs = sampleData._sampleTimeMs;
+        }
+        return isValid;
     }
 
     // Get last samples JSON
-#ifdef STORE_SAMPLES_FOR_DATA_COLLECTION
     String getLastSamplesJSON()
     {
         String tmpStr = _debugLastSamplesJSON;
         _debugLastSamplesJSON = "";
         return tmpStr;
     }
-#endif
 
 private:
     // MAX30101 Address and Registers
@@ -273,21 +274,26 @@ private:
     uint32_t _fifoFullCheckTimeMs = 0;
     static const uint32_t MIN_FIFO_CHECK_FULL_INTERVAL_MS = 10;
 
-    // Sample times
-    uint32_t _lastSampleTimeMs = 0;
+    // Sample interval
     uint32_t _sampleIntervalMs = 20;
 
     // I2C Bus
     RaftI2CCentralIF* _pI2C = nullptr;
 
-    // Debug
-    uint32_t _debugLastShowTimeMs = 0;
-
     // Queue of sample data
-    ThreadSafeQueue<uint16_t> _sampleQueue;
+    class SampleData
+    {
+    public:
+        uint16_t _hrmValue;
+        uint32_t _sampleTimeMs;
+    };
+    ThreadSafeQueue<SampleData> _sampleQueue;
 
     // Debug store JSON samples for data collection
     String _debugLastSamplesJSON;
+
+    // Debug
+    uint32_t _debugLastShowTimeMs = 0;
 
     // Helpers
     bool writeRegister(uint8_t regNum, uint8_t regVal);

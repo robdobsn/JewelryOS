@@ -20,10 +20,13 @@ static const char *MODULE_PREFIX = "Jewelry";
 #define ENABLE_POWER_CONTROL
 
 // The following allows disabling of animations
-// #define ENABLE_ANIMATIONS
+#define ENABLE_ANIMATIONS
 
 // The following disables sleeping
-// #define ENABLE_SLEEP_MODE
+#define ENABLE_SLEEP_MODE
+
+// Debug heart rate
+#define DEBUG_HEART_RATE
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor / Destructor
@@ -93,8 +96,11 @@ void Jewelry::service()
 
 #ifdef ENABLE_ANIMATIONS
     // Handle heart animation
-    bool heartAnimationRequired = Raft::isTimeout(millis(), _lastHeartPulseTimeMs, _timeBetweenHeartPulsesMs);
+#ifndef ENABLE_SLEEP_MODE
+    bool heartAnimationRequired = Raft::isTimeout(millis(), _lastHeartPulseTimeMs, 
+                _hrmAnalysis.getHeartRatePulseIntervalMs());
     if (heartAnimationRequired)
+#endif
     {
         // Start pulse animation
         _ledHeart.startPulseAnimation();
@@ -133,7 +139,7 @@ void Jewelry::service()
     {
 #ifdef ENABLE_SLEEP_MODE
         // Set wakeup timer to worst case time
-        esp_sleep_enable_timer_wakeup(100000);
+        esp_sleep_enable_timer_wakeup(_hrmAnalysis.getTimeToNextPeakMs(millis()) * 1000);
 
         // Set to wakeup on GPIO pins (already setup in MAX30101 hardware init)
         esp_sleep_enable_gpio_wakeup();
@@ -175,25 +181,23 @@ void Jewelry::service()
     }
 #endif
 
-#ifdef STORE_SAMPLES_FOR_DATA_COLLECTION
     // Service data collection if enabled
     String samplesJSON = _max30101.getLastSamplesJSON();
     if (samplesJSON.length() > 0)
     {
         sysModSendCmdJSON("HRMSamples", samplesJSON.c_str());
     }
-#endif
 
-    // TODO remove
-
+    // Debug
+#ifdef DEBUG_HEART_RATE
     if (Raft::isTimeout(millis(), _lastDebugTimeMs, 1000))
     {
-        // LOG_I(MODULE_PREFIX, "pulseRate %f", _max30101.getPulseRate());
-        // LOG_I(MODULE_PREFIX, "Going to sleep .....");
-        // delay(1000);
-        // esp_light_sleep_start();
+        LOG_I(MODULE_PREFIX, "service HR %.3fHz (%.3f BPM) timeToNextPeakMs %d interval %dms",
+                    _hrmAnalysis.getHeartRateHz(),
+                    _hrmAnalysis.getHeartRateHz() * 60,
+                    (int)_hrmAnalysis.getTimeToNextPeakMs(millis()),
+                    (int)_hrmAnalysis.getHeartRatePulseIntervalMs());
         _lastDebugTimeMs = millis();
     }
+#endif
 }
-
-

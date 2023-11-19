@@ -56,6 +56,12 @@ public:
         return _phaseLockedLoop.timeToNextPeakMs(curTimeMs);
     }
 
+    // Get heart rate pulse interval ms
+    uint32_t getHeartRatePulseIntervalMs()
+    {
+        return 1000 / _phaseLockedLoop.getBeatFreqHz();
+    }
+
 private:
     IIRFilter _lowPassFilter;
     IIRFilter _highPassFilter;
