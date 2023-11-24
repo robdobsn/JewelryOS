@@ -7,6 +7,7 @@
 
 #include "DetectHardware.h"
 #include "esp_log.h"
+#include "RaftArduino.h"
 
 // Module
 static const char *MODULE_PREFIX = "DetectHardware";
@@ -23,7 +24,24 @@ int DetectHardware::detectHardware()
     // Default to generic
     _hardwareRevision = HW_IS_GENERIC_BOARD;
 
-    ESP_LOGI(MODULE_PREFIX, "detectHardware() returning %s (%d)", 
-                getHWRevisionStr(_hardwareRevision), _hardwareRevision);
+    // Check analog levels on pins 3 and 4
+    // Pin 3 is Vsense on Grid Earrings and LEDS_2 on Heart Earrings
+    // Pin 4 is Vsense on Heart Earrings and PWR_OFF on Grid Earrings
+    // With no battery connected but running on charger (i.e. 4.2V):
+    // - Heart earrings vsensePin4 = 1869 vsensePin3 = 704
+    // - Grid earrings vsensePin4 = 4095 vsensePin3 = 3209
+    uint32_t vsensePin4 = analogRead(4);
+    uint32_t vsensePin3 = analogRead(3);
+
+    // Check which makes sense
+    if (vsensePin3 < 1200)
+        _hardwareRevision = HW_IS_HEART_EARRINGS;
+    else
+        _hardwareRevision = HW_IS_GRID_EARRINGS;
+
+    ESP_LOGI(MODULE_PREFIX, "detectHardware() vsenseHeart %d vsenseGrid %d returning %s (%d)", 
+                (int)vsensePin4, (int)vsensePin3,
+                getHWRevisionStr(_hardwareRevision), 
+                _hardwareRevision);
     return _hardwareRevision;
 }

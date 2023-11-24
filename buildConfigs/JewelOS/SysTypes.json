@@ -44,6 +44,11 @@
             "logLevel": "D"
         },
         "Jewelry": {
+            "hardwareType":
+            [
+                {"__hwRevs__": [2], "__value__":"heart"},
+                {"__hwRevs__": [3], "__value__":"grid"}
+            ],
             "LEDHeart": {
                 "ledPins": [6,1,3,5],
                 "ledIntensityFactor": [1,1,1,1],
@@ -63,8 +68,24 @@
                 "fifoFullPin": 0,
                 "wakeupOnFifoFull": true
             },
-            "powerCtrlPin": 7,
-            "vsensePin": 4
+            "LEDGrid": {
+                "pixelPowerPin": 6,
+                "pixelPowerActiveLevel": true,
+                "pixelDataPin": 10,
+                "numPixels": 25,
+                "brightnessPC": 10
+
+            },
+            "powerCtrlPin":
+            [
+                {"__hwRevs__": [2], "__value__":7},
+                {"__hwRevs__": [3], "__value__":4}
+            ],
+            "vsensePin":
+            [
+                {"__hwRevs__": [2], "__value__":4},
+                {"__hwRevs__": [3], "__value__":3}
+            ]
         },
         "WebServer": {
             "enable": 1,

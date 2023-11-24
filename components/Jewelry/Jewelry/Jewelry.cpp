@@ -26,7 +26,10 @@ static const char *MODULE_PREFIX = "Jewelry";
 #define ENABLE_SLEEP_MODE
 
 // Debug heart rate
-#define DEBUG_HEART_RATE
+// #define DEBUG_HEART_RATE
+
+// Enable LED grid
+#define ENABLE_LED_GRID
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constructor / Destructor
@@ -50,33 +53,51 @@ void Jewelry::setup()
     // Call base class
     SysModBase::setup();
 
-    // Get I2C details
-    String pinName = configGetString("sdaPin", "");
-    _sdaPin = ConfigPinMap::getPinFromName(pinName.c_str());
-    pinName = configGetString("sclPin", "");
-    _sclPin = ConfigPinMap::getPinFromName(pinName.c_str());
-    _freq = configGetLong("i2cFreq", 100000);
-
-    // Check valid
-    if ((_sdaPin < 0) || (_sclPin < 0))
-    {
-        LOG_E(MODULE_PREFIX, "setup I2C pins not specified");
-        return;
-    }
-
 #ifdef ENABLE_POWER_CONTROL
     // Setup power control
     _powerControl.setup(configGetConfig(), "PowerControl");
 #endif
 
-    // Setup LED heart
-    _ledHeart.setup(configGetConfig(), "LEDHeart");
+    // Check hardware type
+    String hwTypeStr = configGetString("hardwareType", "");
+    if (hwTypeStr == "grid")
+        _hardwareType = HARDWARE_TYPE_GRID_EARRINGS;
+    else if (hwTypeStr == "heart")
+        _hardwareType = HARDWARE_TYPE_HEART_EARRINGS;
 
-    // Setup I2C
-    _i2cCentral.init(0, _sdaPin, _sclPin, _freq);
+    // Handle setup of different hardware
+    if (_hardwareType == HARDWARE_TYPE_HEART_EARRINGS)
+    {
+        // Get I2C details
+        String pinName = configGetString("sdaPin", "");
+        _sdaPin = ConfigPinMap::getPinFromName(pinName.c_str());
+        pinName = configGetString("sclPin", "");
+        _sclPin = ConfigPinMap::getPinFromName(pinName.c_str());
+        _freq = configGetLong("i2cFreq", 100000);
 
-    // Setup MAX30101
-    _max30101.setup(configGetConfig(), "MAX30101", &_i2cCentral);
+        // Check valid
+        if ((_sdaPin < 0) || (_sclPin < 0))
+        {
+            LOG_E(MODULE_PREFIX, "setup I2C pins not specified");
+            return;
+        }
+
+        // Setup LED heart
+        _ledHeart.setup(configGetConfig(), "LEDHeart");
+
+        // Setup I2C
+        _i2cCentral.init(0, _sdaPin, _sclPin, _freq);
+
+        // Setup MAX30101
+        _max30101.setup(configGetConfig(), "MAX30101", &_i2cCentral);
+    }
+    else
+    {
+#ifdef ENABLE_LED_GRID
+        // Setup LED grid
+        _ledGrid.setup(configGetConfig(), "LEDGrid");
+#endif
+    }
 
     // Debug
 #ifdef USE_PIN_FOR_DEBUG
@@ -90,6 +111,68 @@ void Jewelry::setup()
 ///////////////////////////////////////////////////////////////////////////////
 
 void Jewelry::service()
+{
+    // Check hardware revision
+    if (_hardwareType == HARDWARE_TYPE_HEART_EARRINGS)
+    {
+        // Service heart-rate monitor
+        serviceHRM();
+    }
+    else
+    {
+        serviceGrid();
+    }
+
+#ifdef ENABLE_POWER_CONTROL
+    // Service power control
+    _powerControl.service();
+
+    // Check for shutdown
+    if (_powerControl.isShutdownRequested())
+    {
+        // Debug
+        LOG_I(MODULE_PREFIX, "service shutdown requested");
+        delay(100);
+
+        if (_hardwareType == HARDWARE_TYPE_HEART_EARRINGS)
+        {
+            // Shutdown MAX30101
+            _max30101.shutdown();
+
+            // Turn off I2C
+            _i2cCentral.deinit();
+        }
+        else
+        {
+#ifdef ENABLE_LED_GRID
+            // Shutdown LED grid
+            _ledGrid.shutdown();
+#endif
+        }
+
+        // Shutdown
+        _powerControl.shutdown();
+    }
+#endif
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Service grid
+///////////////////////////////////////////////////////////////////////////////
+
+void Jewelry::serviceGrid()
+{
+#ifdef ENABLE_LED_GRID
+    // Service
+    _ledGrid.service();
+#endif
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Service heart-rate monitor
+///////////////////////////////////////////////////////////////////////////////
+
+void Jewelry::serviceHRM()
 {
     // Service MAX30101
     _max30101.service();
@@ -158,28 +241,6 @@ void Jewelry::service()
         // Process HRM value
         _hrmAnalysis.process(hrmValue, sampleTimeMs);
     }
-
-#ifdef ENABLE_POWER_CONTROL
-    // Service power control
-    _powerControl.service();
-
-    // Check for shutdown
-    if (_powerControl.isShutdownRequested())
-    {
-        // Debug
-        LOG_I(MODULE_PREFIX, "service shutdown requested");
-        delay(100);
-
-        // Shutdown MAX30101
-        _max30101.shutdown();
-
-        // Turn off I2C
-        _i2cCentral.deinit();
-
-        // Shutdown
-        _powerControl.shutdown();
-    }
-#endif
 
     // Service data collection if enabled
     String samplesJSON = _max30101.getLastSamplesJSON();

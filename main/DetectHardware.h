@@ -9,6 +9,8 @@
 
 enum HWRevision {
     HW_IS_GENERIC_BOARD = 1,
+    HW_IS_HEART_EARRINGS = 2,
+    HW_IS_GRID_EARRINGS = 3,
     };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,6 +34,10 @@ public:
         {
             case HW_IS_GENERIC_BOARD:
                 return "Generic";
+            case HW_IS_HEART_EARRINGS:
+                return "HeartEarrings";
+            case HW_IS_GRID_EARRINGS:
+                return "GridEarrings";
         }
         return "Unknown";
     }

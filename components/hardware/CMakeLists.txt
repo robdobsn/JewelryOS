@@ -3,10 +3,12 @@ idf_component_register(
                   "MAX30101/MAX30101.cpp"
                   "PowerControl/PowerControl.cpp"
                   "LEDHeart/LEDHeart.cpp"
+                  "LEDGrid/LEDGrid.cpp"
                 INCLUDE_DIRS
                   "MAX30101"
                   "PowerControl"
                   "LEDHeart"
+                  "LEDGrid"
                 REQUIRES
                   raftcore-src
                   rafti2c-src

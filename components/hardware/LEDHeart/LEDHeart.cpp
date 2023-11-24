@@ -9,8 +9,9 @@
 #include "LEDHeart.h"
 #include "Logger.h"
 #include "RaftUtils.h"
+#include "ConfigPinMap.h"
 
-static const char* MODULE_PREFIX = "LEDHeart: ";
+static const char* MODULE_PREFIX = "LEDHeart";
 
 #define DEBUG_LED_HEART_PINS
 // #define USE_FIXED_TIMER_FOR_LED_BRIGHTNESS
@@ -46,7 +47,7 @@ void LEDHeart::setup(ConfigBase& config, const char* pConfigPrefix)
     _ledPins.clear();
     for (int ledIdx = 0; ledIdx < ledPinStrs.size(); ledIdx++)
     {
-        int ledPin = ledPinStrs[ledIdx].toInt();
+        int ledPin = ConfigPinMap::getPinFromName(ledPinStrs[ledIdx].c_str());
         if (ledPin > 0)
             _ledPins.push_back(ledPin);
     }

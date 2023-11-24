@@ -15,6 +15,7 @@
 #include "PowerControl.h"
 #include "LEDHeart.h"
 #include "HRMAnalysis.h"
+#include "LEDGrid.h"
 
 class Jewelry : public SysModBase
 {
@@ -57,4 +58,20 @@ private:
 
     // HRM analysis
     HRMAnalysis _hrmAnalysis;
+
+    // LED grid
+    LEDGrid _ledGrid;
+
+    // Hardware type
+    enum HardwareType
+    {
+        HARDWARE_TYPE_UNKNOWN = 0,
+        HARDWARE_TYPE_HEART_EARRINGS = 1,
+        HARDWARE_TYPE_GRID_EARRINGS = 2,
+    };
+    HardwareType _hardwareType = HARDWARE_TYPE_UNKNOWN;
+
+    // Helpers
+    void serviceGrid();
+    void serviceHRM();
 };
