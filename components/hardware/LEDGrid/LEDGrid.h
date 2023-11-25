@@ -20,14 +20,14 @@ public:
     ~LEDGrid();
 
     // Setup
-    void setup(ConfigBase& config, const char* pConfigPrefix);
+    void setup(const ConfigBase& config, const char* pConfigPrefix);
 
     // Service
     void service();
 
     // Shutdown
     void shutdown();
-    
+
     // Get time to next animation step
     uint32_t getTimeToNextAnimStepUs();
 

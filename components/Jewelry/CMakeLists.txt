@@ -1,8 +1,12 @@
 idf_component_register(
                 SRCS 
                   "Jewelry/Jewelry.cpp"
+                  "HeartEarring/HeartEarring.cpp"
+                  "GridEarring/GridEarring.cpp"                  
                 INCLUDE_DIRS
                   "Jewelry"
+                  "HeartEarring"
+                  "GridEarring"
                 REQUIRES
                   raftcore-src
                   rafti2c-src

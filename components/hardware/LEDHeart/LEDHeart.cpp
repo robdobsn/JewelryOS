@@ -32,7 +32,7 @@ LEDHeart::~LEDHeart()
 // Setup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LEDHeart::setup(ConfigBase& config, const char* pConfigPrefix)
+void LEDHeart::setup(const ConfigBase& config, const char* pConfigPrefix)
 {
     // Get LED pins
     std::vector<String> ledPinStrs;

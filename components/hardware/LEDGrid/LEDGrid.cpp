@@ -10,6 +10,7 @@
 #include "Logger.h"
 #include "RaftUtils.h"
 #include "ConfigPinMap.h"
+#include "driver/gpio.h"
 
 static const char* MODULE_PREFIX = "LEDGrid";
 
@@ -34,7 +35,7 @@ LEDGrid::~LEDGrid()
 // Setup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LEDGrid::setup(ConfigBase& config, const char* pConfigPrefix)
+void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
 {
     // Get the pixel power control pin
     String pixelPowerPin = config.getString("pixelPowerPin", "", pConfigPrefix);
@@ -63,9 +64,9 @@ void LEDGrid::setup(ConfigBase& config, const char* pConfigPrefix)
 
     // Log
 #ifdef DEBUG_LED_GRID_SETUP
-    LOG_I(MODULE_PREFIX, "setup %s numPixels %d pixelPowerPin %d activeLevel %s", 
+    LOG_I(MODULE_PREFIX, "setup %s numPixels %d pixelPowerPin %d activeLevel %s configPrefix %s", 
                 rslt ? "OK" : "FAILED", _ledPixels.getNumPixels(),
-                _pixelPowerPin, _pixelPowerActiveLevel ? "HIGH" : "LOW");
+                _pixelPowerPin, _pixelPowerActiveLevel ? "HIGH" : "LOW", pConfigPrefix);
 #endif
 }
 

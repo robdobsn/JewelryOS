@@ -19,7 +19,7 @@ public:
     ~LEDHeart();
 
     // Setup
-    void setup(ConfigBase& config, const char* pConfigPrefix);
+    void setup(const ConfigBase& config, const char* pConfigPrefix);
 
     // Service
     void service();

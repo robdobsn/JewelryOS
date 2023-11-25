@@ -24,7 +24,7 @@ public:
     virtual ~MAX30101();
 
     // Setup
-    void setup(ConfigBase& config, const char* pConfigPrefix, RaftI2CCentralIF* pBus);
+    void setup(const ConfigBase& config, const char* pConfigPrefix, RaftI2CCentralIF* pBus);
 
     // Service
     void service();

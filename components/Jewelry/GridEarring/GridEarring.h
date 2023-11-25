@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// LED Heart
+// Grid Earring
 //
 // Rob Dobson 2023
 //
@@ -8,28 +8,29 @@
 
 #pragma once
 
-class LEDHeart
+#include "JewelryBase.h"
+#include "LEDGrid.h"
+
+class GridEarring : public JewelryBase
 {
 public:
 
     // Constructor / Destructor
-    LEDHeart();
-    ~LEDHeart();
+    GridEarring();
+    virtual ~GridEarring();
 
     // Setup
-    void setup();
+    virtual void setup(const ConfigBase& config, const char* pConfigPrefix) override final;
 
     // Service
-    void service();
+    virtual void service() override final;
 
     // Shutdown
-    void shutdown();
-    
-    // Get time to next animation step
-    uint32_t getTimeToNextAnimStepUs();
-
-    // Start pulse animation
-    void startPulseAnimation();
+    virtual void shutdown() override final;
 
 private:
+
+    // LED grid
+    LEDGrid _ledGrid;
+    
 };

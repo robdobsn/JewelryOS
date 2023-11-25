@@ -40,7 +40,7 @@ MAX30101::~MAX30101()
 // Setup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MAX30101::setup(ConfigBase& config, const char* pConfigPrefix, RaftI2CCentralIF* pI2C)
+void MAX30101::setup(const ConfigBase& config, const char* pConfigPrefix, RaftI2CCentralIF* pI2C)
 {
     // Store I2C
     _pI2C = pI2C;
