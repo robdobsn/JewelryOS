@@ -25,7 +25,7 @@ PowerControl::~PowerControl()
 void PowerControl::setup(ConfigBase& config, const char* pConfigPrefix)
 {
     // Get power control pin
-    String pinName = config.getString("powerCtrlPin", "");
+    String pinName = config.getString("powerCtrlPin", "", pConfigPrefix);
     _powerCtrlPin = ConfigPinMap::getPinFromName(pinName.c_str());
 
     // Set power control pin to ensure power remains on
@@ -37,7 +37,7 @@ void PowerControl::setup(ConfigBase& config, const char* pConfigPrefix)
     }
 
     // Setup VSENSE pin
-    pinName = config.getString("vsensePin", "");
+    pinName = config.getString("vsensePin", "", pConfigPrefix);
     _vsensePin = ConfigPinMap::getPinFromName(pinName.c_str());
     if (_vsensePin >= 0)
     {

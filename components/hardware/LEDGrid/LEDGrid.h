@@ -28,6 +28,13 @@ public:
     // Shutdown
     void shutdown();
 
+    // Pre and Post sleep
+    void preSleep();
+    void postSleep();
+
+    // Wait for animation to complete
+    void waitAnimComplete();
+
     // Get time to next animation step
     uint32_t getTimeToNextAnimStepUs();
 

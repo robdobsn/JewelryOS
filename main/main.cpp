@@ -121,9 +121,15 @@ static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in 
 // Jewelry
 #include "Jewelry.h"
 
+// BLE
+#include <BLEManager.h>
+
+// Comms
+#include <CommsChannelManager.h>
+#include <ProtocolExchange.h>
+
 #ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
 #include "SampleCollectorJSON.h"
-#include <CommsChannelManager.h>
 #include <SerialConsole.h>
 #include <FileManager.h>
 #include <NetworkManager.h>
@@ -131,13 +137,11 @@ static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in 
 // #include <LogManager.h>
 // #include <FileSystem.h>
 // #include <ESPOTAUpdate.h>
-// #include <ProtocolExchange.h>
 // #include <MQTTManager.h>
 // #include <StatePublisher.h>
 // #include <CommandSerial.h>
 // #include <CommandSocket.h>
 // #include <CommandFile.h>
-// #include <BLEManager.h>
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,27 +231,27 @@ extern "C" void app_main(void)
     // Set up the hardware
     Jewelry _jewelry("Jewelry", defaultSystemConfig, &_sysTypeConfig, nullptr);
 
+    // Comms Channel Manager
+    CommsChannelManager _commsChannelManager("CommsMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    _sysManager.setCommsCore(&_commsChannelManager);
+
+    // ProtocolExchange
+    ProtocolExchange _protocolExchange("ProtExchg", defaultSystemConfig, &_sysTypeConfig, nullptr);
+
     // Sample collector
 #ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
     SampleCollectorJSON _sampleCollector("HRMSamples", defaultSystemConfig, &_sysTypeConfig, nullptr);
     _sampleCollector.setSamplingInfo(0, 4000, "{\"name\":\"hrmdata\"}", "hrmsamples", true, false);
-
-    // Comms Channel Manager
-    CommsChannelManager _commsChannelManager("CommsMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
-    _sysManager.setCommsCore(&_commsChannelManager);
 
     // SerialConsole
     SerialConsole _serialConsole("SerialConsole", defaultSystemConfig, &_sysTypeConfig, nullptr);
 
     // FileManager
     FileManager _fileManager("FileManager", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    _fileManager.setProtocolExchange(_protocolExchange);
 
     // NetworkManager
     NetworkManager _networkManager("NetMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
-
-    // ProtocolExchange
-    ProtocolExchange _protocolExchange("ProtExchg", defaultSystemConfig, &_sysTypeConfig, nullptr);
-    _fileManager.setProtocolExchange(_protocolExchange);
 
     // WebServer
     WebServer _webServer("WebServer", defaultSystemConfig, &_sysTypeConfig, nullptr);
@@ -278,6 +282,9 @@ extern "C" void app_main(void)
     // LogManager _LogManager("LogManager", defaultSystemConfig, &_sysTypeConfig, &_sysModMutableConfig);
 #endif    
 
+    // BLEManager
+    BLEManager _bleManager("BLEMan", defaultSystemConfig, &_sysTypeConfig, nullptr, DEFAULT_ADVNAME);
+    
     // Log out system info
     ESP_LOGI(MODULE_NAME, SYSTEM_NAME " " SYSTEM_VERSION " (built " __DATE__ " " __TIME__ ") Heap %d", 
                         heap_caps_get_free_size(MALLOC_CAP_8BIT));
@@ -304,8 +311,8 @@ extern "C" void app_main(void)
     while (1)
     {
         // Yield
-        // vTaskDelay(1);
-        taskYIELD();
+        vTaskDelay(1);
+        // taskYIELD();
 
         // Service all the system modules
         _sysManager.service();

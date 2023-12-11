@@ -7,6 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "GridEarring.h"
+#include "esp_sleep.h"
 
 static const char *MODULE_PREFIX = "GridEarring";
 
@@ -38,6 +39,27 @@ void GridEarring::service()
 
     // Service
     _ledGrid.service();
+
+    // Get time to next animation step
+    // UINT32_MAX means that animation has finished
+    uint32_t timeToNextAnimStepUs = _ledGrid.getTimeToNextAnimStepUs();
+    if (timeToNextAnimStepUs == UINT32_MAX)
+        return;
+
+    // Cbeck animation complete
+    _ledGrid.waitAnimComplete();
+
+    // TODO PUT BACK
+
+    // // Pre-sleep
+    // _ledGrid.preSleep();
+
+    // // Sleep for time to next animation step
+    // esp_sleep_enable_timer_wakeup(timeToNextAnimStepUs);
+    // esp_light_sleep_start();    
+
+    // // Post-sleep
+    // _ledGrid.postSleep();
 }
 
 void GridEarring::shutdown()

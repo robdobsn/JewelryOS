@@ -35,9 +35,14 @@ int DetectHardware::detectHardware()
 
     // Check which makes sense
     if (vsensePin3 < 1200)
-        _hardwareRevision = HW_IS_HEART_EARRINGS;
-    else
-        _hardwareRevision = HW_IS_GRID_EARRINGS;
+    {
+        if (vsensePin4 < 1200)
+            _hardwareRevision = HW_IS_HEART_EARRINGS;
+    }
+    else 
+    {
+        _hardwareRevision = HW_IS_GRID_EARRINGS_V1_1;
+    }
 
     ESP_LOGI(MODULE_PREFIX, "detectHardware() vsenseHeart %d vsenseGrid %d returning %s (%d)", 
                 (int)vsensePin4, (int)vsensePin3,

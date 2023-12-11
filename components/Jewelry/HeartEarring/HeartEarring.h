@@ -39,6 +39,9 @@ public:
 
 private:
 
+    // Debug
+    uint32_t _lastDebugTimeMs = 0;
+    
     // Time between heart pulses
     uint32_t _timeBetweenHeartPulsesMs = 1000;
     uint32_t _lastHeartPulseTimeMs = 0;

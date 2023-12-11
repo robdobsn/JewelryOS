@@ -133,7 +133,7 @@ void LEDHeart::service()
             _nextAnimStepAfterUs = UINT32_MAX;
         }
 
-        // Set next animation step time
+        // Set last animation step time
         _lastAnimTimeUs = micros();
     }
 }

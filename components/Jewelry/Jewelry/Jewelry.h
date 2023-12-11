@@ -12,6 +12,8 @@
 #include "PowerControl.h"
 #include "JewelryBase.h"
 
+class APISourceInfo;
+
 class Jewelry : public SysModBase
 {
 public:
@@ -26,6 +28,12 @@ protected:
     // Service (called frequently)
     virtual void service() override final;
 
+    // Add endpoints
+    virtual void addRestAPIEndpoints(RestAPIEndpointManager& pEndpoints) override final;
+
+    // Status
+    virtual String getStatusJSON() override final;
+
 private:
 
     // Debug
@@ -36,4 +44,7 @@ private:
 
     // Heart earring
     JewelryBase* _pJewelry = nullptr;
+
+    // Helper functions
+    RaftRetCode apiControl(const String &reqStr, String &respStr, const APISourceInfo& sourceInfo);    
 };

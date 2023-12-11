@@ -30,7 +30,7 @@ unset(buildConfigName)
 FetchContent_Declare(
   raftcore
   GIT_REPOSITORY https://github.com/robdobsn/RaftCore.git
-  GIT_TAG        v1.2.2
+  GIT_TAG        v1.2.7
 )
 
 # Fetch the RaftWebServer library

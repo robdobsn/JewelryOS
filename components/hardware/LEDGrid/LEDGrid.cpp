@@ -10,14 +10,18 @@
 #include "Logger.h"
 #include "RaftUtils.h"
 #include "ConfigPinMap.h"
+#include "LEDPatternRainbowSnake.h"
+#include "LEDPatternScrollMsg.h"
 #include "driver/gpio.h"
 
 static const char* MODULE_PREFIX = "LEDGrid";
 
-#define HOLD_PIXEL_POWER_PIN_DURING_SLEEP
+#define HOLD_PIXEL_PINS_DURING_SLEEP
 
 #define DEBUG_LED_GRID_SETUP
 // #define USE_FIXED_TIMER_FOR_LED_BRIGHTNESS
+
+// #define ANIMATION_IN_THIS_CLASS
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Constructor / Destructor
@@ -49,18 +53,19 @@ void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
     {
         pinMode(_pixelPowerPin, OUTPUT);
         digitalWrite(_pixelPowerPin, _pixelPowerActiveLevel);
-
-#ifdef HOLD_PIXEL_POWER_PIN_DURING_SLEEP
-        gpio_hold_en((gpio_num_t)_pixelPowerPin);
-#endif
     }
 
     // Get LED pins
     bool rslt = _ledPixels.setup(config, pConfigPrefix);
-    
+
     // Set animation count & timing
     _animationCount = _ledPixels.getNumPixels();
     _nextAnimStepAfterUs = 100000;
+
+    // Add patterns to LED pixels
+    _ledPixels.addPattern("RainbowSnake", &LEDPatternRainbowSnake::build);
+    _ledPixels.addPattern("ScrollMsg", &LEDPatternScrollMsg::build);
+    _ledPixels.setPattern("RainbowSnake");
 
     // Log
 #ifdef DEBUG_LED_GRID_SETUP
@@ -76,23 +81,11 @@ void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
 
 void LEDGrid::service()
 {
-    // // Turn off any LEDs that need to be turned off
-    // for (int ledIdx = 0; ledIdx < _ledPins.size(); ledIdx++)
-    // {
-    //     if (_animationOffAfterUs[ledIdx] > 0)
-    //     {
-    //         if (Raft::isTimeout(micros(), _lastAnimTimeUs, _animationOffAfterUs[ledIdx]))
-    //         {
-    //             digitalWrite(_ledPins[ledIdx], !_ledActiveLevel);
-    //             _animationOffAfterUs[ledIdx] = 0;
-    //             // LOG_I(MODULE_PREFIX, "service setLedOff ledIdx %d", ledIdx);
-    //         }
-    //     }
-    // }
-
+#ifdef ANIMATION_IN_THIS_CLASS
     // Check if time for next step in sequence
     if (Raft::isTimeout(micros(), _lastAnimTimeUs, _nextAnimStepAfterUs))
     {
+        // LOG_I(MODULE_PREFIX, "service animStep %d animColourIdx %d", _animationStepNum, _animationColourIdx);
         // Handle animation step
         handleAnimationStep();
 
@@ -112,6 +105,9 @@ void LEDGrid::service()
         // Set next animation step time
         _lastAnimTimeUs = micros();
     }
+#else
+    _ledPixels.service();
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +120,11 @@ void LEDGrid::handleAnimationStep()
     _ledPixels.clear();
     _ledPixels.setPixelColor(_animationStepNum, _animationColours[_animationColourIdx]);
     _ledPixels.show();
+
+    // LOG_I(MODULE_PREFIX, "handleAnimationStep animStep %d animColourIdx %d colour %06x", 
+    //             _animationStepNum, _animationColourIdx, _animationColours[_animationColourIdx]);
+
+    // delayMicroseconds(1500);
 
 //     // Set LEDs
 //     for (int ledIdx = 0; ledIdx < _ledPins.size(); ledIdx++)
@@ -158,28 +159,26 @@ void LEDGrid::handleAnimationStep()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Wait for animation to complete
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void LEDGrid::waitAnimComplete()
+{
+    _ledPixels.waitUntilShowComplete();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Get time to next animation step
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint32_t LEDGrid::getTimeToNextAnimStepUs()
 {
-    // // Check if any LEDs need to be turned off
-    // uint32_t animOffTimeUs = UINT32_MAX;
-    // for (int ledIdx = 0; ledIdx < _ledPins.size(); ledIdx++)
-    // {
-    //     if (_animationOffAfterUs[ledIdx] > 0)
-    //     {
-    //         if (_animationOffAfterUs[ledIdx] < animOffTimeUs)
-    //             animOffTimeUs = _animationOffAfterUs[ledIdx];
-    //     }
-    // }
-
     // uint32_t timeUs = _nextAnimStepAfterUs < animOffTimeUs ? _nextAnimStepAfterUs : animOffTimeUs;
-    // // LOG_I(MODULE_PREFIX, "getTimeToNextAnimStepMs nextAnimStepTimeMs %d animOffTimeMs %d timeMs %d", 
-    // //         _nextAnimStepAfterUs, animOffTimeMs, timeMs);
+    // LOG_I(MODULE_PREFIX, "getTimeToNextAnimStepMs nextAnimStepTimeMs %d animOffTimeMs %d timeMs %d", 
+    //         _nextAnimStepAfterUs, animOffTimeMs, timeMs);
     // return timeUs;
 
-    return 0;
+    return _nextAnimStepAfterUs;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,3 +193,34 @@ void LEDGrid::shutdown()
         digitalWrite(_pixelPowerPin, !_pixelPowerActiveLevel);
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Pre and Post sleep
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void LEDGrid::preSleep()
+{
+    // Hold power pin
+#ifdef HOLD_PIXEL_PINS_DURING_SLEEP
+    if (_pixelPowerPin >= 0)
+        gpio_hold_en((gpio_num_t)_pixelPowerPin);
+    int dataPin = _ledPixels.getDataPin();
+    if (dataPin >= 0)
+        gpio_hold_en((gpio_num_t)dataPin);
+//     }
+// #endif
+#endif
+}
+
+void LEDGrid::postSleep()
+{
+    // Release power pin
+#ifdef HOLD_PIXEL_PINS_DURING_SLEEP
+    if (_pixelPowerPin >= 0)
+        gpio_hold_dis((gpio_num_t)_pixelPowerPin);
+    int dataPin = _ledPixels.getDataPin();
+    if (dataPin >= 0)
+        gpio_hold_dis((gpio_num_t)dataPin);
+#endif
+}
+

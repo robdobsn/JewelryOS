@@ -12,6 +12,15 @@
 
 static const char *MODULE_PREFIX = "HeartEarring";
 
+// The following allows disabling of animations
+#define ENABLE_ANIMATIONS
+
+// The following allows disabling sleep
+#define ENABLE_SLEEP_MODE
+
+// Debug heart rate
+// #define DEBUG_HEART_RATE
+
 HeartEarring::HeartEarring()
 {
 }
@@ -93,12 +102,12 @@ void HeartEarring::service()
             esp_light_sleep_start();
 #else // ENABLE_SLEEP_MODE
             // Delay for time to next animation step
-#ifdef USE_PIN_FOR_DEBUG
-            digitalWrite(USE_PIN_FOR_DEBUG, HIGH);
+#ifdef DEBUG_USE_GPIO_PIN_FOR_TIMING
+            digitalWrite(DEBUG_USE_GPIO_PIN_FOR_TIMING, HIGH);
 #endif
             delayMicroseconds(timeToNextAnimStepUs);
-#ifdef USE_PIN_FOR_DEBUG
-            digitalWrite(USE_PIN_FOR_DEBUG, LOW);
+#ifdef DEBUG_USE_GPIO_PIN_FOR_TIMING
+            digitalWrite(DEBUG_USE_GPIO_PIN_FOR_TIMING, LOW);
 #endif
 #endif // ENABLE_SLEEP_MODE
         }

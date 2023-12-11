@@ -32,8 +32,24 @@
                 "CtrlEscape":"0xD7"
             }
         },
+        "BLEMan": {
+            "enable": 1,
+            "outQSize": 15,
+            "sendUseInd": 1,
+            "advIntervalMs": 200,
+            "uuidCmdRespService": "b6144230-941b-11ee-b9d1-0242ac120002",
+            "uuidCmdRespCommand": "b61443a0-941b-11ee-b9d1-0242ac120003",
+            "uuidCmdRespResponse": "b61443a0-941b-11ee-b9d1-0242ac120004",
+            "stdServices": [
+                "battery",
+                "devinfo",
+                "heartrate"
+            ],
+            "logLevel": "D",
+            "nimLogLev": "E"
+        },        
         "NetMan": {
-            "wifiSTAEn": 1,
+            "wifiSTAEn": 0,
             "wifiAPEn": 0,
             "ethEn": 0,
             "wifiSSID": "rdint01",
@@ -81,16 +97,19 @@
                     "brightnessPC": 10
                 }
             },
-            "powerCtrlPin":
-            [
-                {"__hwRevs__": [2], "__value__":7},
-                {"__hwRevs__": [3], "__value__":4}
-            ],
-            "vsensePin":
-            [
-                {"__hwRevs__": [2], "__value__":4},
-                {"__hwRevs__": [3], "__value__":3}
-            ]
+            "PowerControl":
+            {
+                "powerCtrlPin":
+                [
+                    {"__hwRevs__": [2], "__value__":7},
+                    {"__hwRevs__": [3], "__value__":4}
+                ],
+                "vsensePin":
+                [
+                    {"__hwRevs__": [2], "__value__":4},
+                    {"__hwRevs__": [3], "__value__":3}
+                ]
+            }
         },
         "WebServer": {
             "enable": 1,

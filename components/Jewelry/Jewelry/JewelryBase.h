@@ -11,6 +11,9 @@
 #include "RaftArduino.h"
 #include "ConfigBase.h"
 
+// Disable this when not debugging
+// #define DEBUG_USE_GPIO_PIN_FOR_TIMING 9
+
 class JewelryBase
 {
 public:
