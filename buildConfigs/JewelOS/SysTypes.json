@@ -90,7 +90,11 @@
             "GridEarring":
             {
                 "LEDGrid": {
-                    "pixelPowerPin": 6,
+                    "pixelPowerPin": 
+                    [
+                        {"__hwRevs__": [3], "__value__":6},
+                        {"__hwRevs__": [4], "__value__":5}
+                    ],
                     "pixelPowerActiveLevel": true,
                     "pixelDataPin": 10,
                     "numPixels": 25,
@@ -102,12 +106,14 @@
                 "powerCtrlPin":
                 [
                     {"__hwRevs__": [2], "__value__":7},
-                    {"__hwRevs__": [3], "__value__":4}
+                    {"__hwRevs__": [3], "__value__":4},
+                    {"__hwRevs__": [4], "__value__":6}
                 ],
                 "vsensePin":
                 [
                     {"__hwRevs__": [2], "__value__":4},
-                    {"__hwRevs__": [3], "__value__":3}
+                    {"__hwRevs__": [3], "__value__":3},
+                    {"__hwRevs__": [4], "__value__":4}
                 ]
             }
         },
