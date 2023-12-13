@@ -9,7 +9,7 @@
 #pragma once
 
 #include "LEDPatternBase.h"
-#include "LEDPatternFont5x5.h"
+#include "Font5x5.h"
 #include <JSONParams.h>
 
 class LEDPatternScrollMsg : public LEDPatternBase
@@ -38,38 +38,70 @@ public:
 
         // Get JSON
         JSONParams params(pParamsJson);
-
-        // 
-
-
     }
 
     // Service
     void service() override final
     {
         // Check update time
-
-        // TODO change back to _refreshRateMs
-        
-        if (!Raft::isTimeout(millis(), _lastLoopMs, 100))
+        if (!Raft::isTimeout(millis(), _lastLoopMs, _refreshRateMs * _rateMultiple))
             return;
         _lastLoopMs = millis();
 
-        // Calculations
-        uint32_t totalColsWithCharData = (_msg.length() * (_charWidthCols + _interCharBlankCols) - 1);
+        // Check for new message
+        if (isNewMsg())
+        {
+            // Fill array of char start indexes
+            _msgCharNextColIdxs.resize(_msg.length());
+            _msgCharTotalWidths = 0;
+            for (uint32_t i = 0; i < _msg.length(); i++)
+            {
+                uint32_t ch = _msg.charAt(i);
+                if (ch < Font5x5::start || ch >= Font5x5::end)
+                    continue;
+                _msgCharTotalWidths += Font5x5::font[ch - Font5x5::start][0] + _interCharBlankCols;
+                _msgCharNextColIdxs[i] = _msgCharTotalWidths;
+                // LOG_I("LEDPatternScrolling", "chIdx %d ch %02x nextCharStartIdx %d totalWidth %d fontCharWidth %d", 
+                //             i, ch, _msgCharNextColIdxs[i], _msgCharTotalWidths, Font5x5::font[ch - Font5x5::start][0]);
+            }
+
+            // LOG_I("LEDPatternScrolling", "New message %s totalWidth %d numStartIdxs %d", 
+            //             _msg.c_str(), _msgCharTotalWidths, _msgCharNextColIdxs.size());
+        }
 
         // Iterate over columns in LED grid
+        uint32_t totalCols = _preMsgBlankCols + _msgCharTotalWidths + _postMsgBlankCols;
         for (uint32_t colIdx = 0; colIdx < _gridWidth; colIdx++)
         {
-            // Calculations
-            uint32_t curAnimColumn = (_curAnimCount + colIdx) % (_preMsgBlankCols + totalColsWithCharData + _postMsgBlankCols);
+            // Column calculations
+            uint32_t curAnimColumn = (_curAnimCount + colIdx) % totalCols;
             bool preMsgBlank = curAnimColumn < _preMsgBlankCols;
-            bool postMsgBlank = curAnimColumn >= totalColsWithCharData + _preMsgBlankCols;
-            uint32_t colWithinCharIdx = (curAnimColumn - _preMsgBlankCols) % (_charWidthCols + _interCharBlankCols);
-            bool interCharBlank = colWithinCharIdx >= _charWidthCols;
+            bool postMsgBlank = curAnimColumn >= _msgCharTotalWidths + _preMsgBlankCols;
+            uint32_t curMsgColumn = curAnimColumn - _preMsgBlankCols;
 
-            // LOG_I("LEDPatternScrollMsg", "colIdx %d curAnimColumn %d preMsgBlank %d postMsgBlank %d colWithinCharIdx %d interCharBlank %d", 
-            //             colIdx, curAnimColumn, preMsgBlank, postMsgBlank, colWithinCharIdx, interCharBlank);
+            // LOG_I("LEDPatternScrolling", "colIdx %d curAnimColumn %d preMsgBlank %d postMsgBlank %d curMsgColumn %d", 
+            //             colIdx, curAnimColumn, preMsgBlank, postMsgBlank, curMsgColumn);
+            
+            // Character calculations
+            bool interCharBlank = false;
+            uint32_t colWithinChar = curMsgColumn;
+            uint32_t charToDispIdx = 0;
+            if (!preMsgBlank && !postMsgBlank)
+            {
+                // Establish character
+                for (charToDispIdx = 0; charToDispIdx < _msgCharNextColIdxs.size(); charToDispIdx++)
+                {
+                    if (curMsgColumn < _msgCharNextColIdxs[charToDispIdx])
+                    {
+                        colWithinChar = curMsgColumn - ((charToDispIdx == 0) ? 0 : _msgCharNextColIdxs[charToDispIdx-1]);
+                        interCharBlank = curMsgColumn >= _msgCharNextColIdxs[charToDispIdx] - _interCharBlankCols;
+                        break;
+                    }
+                }
+            }
+
+            // LOG_I("LEDPatternScrolling", "colIdx %d curAnimColumn %d preMsgBlank %d postMsgBlank %d colWithinChar %d interCharBlank %d charToDispIdx %d",
+            //             colIdx, curAnimColumn, preMsgBlank, postMsgBlank, colWithinChar, interCharBlank, charToDispIdx);
         
             // Handle display
             if (preMsgBlank || postMsgBlank || interCharBlank)
@@ -77,34 +109,33 @@ public:
                 // Blank column
                 for (uint32_t rowIdx = 0; rowIdx < _gridHeight; rowIdx++)
                 {
-                    _pixels.setRGB((_gridWidth-colIdx-1) + rowIdx*_gridWidth, 0, 0, 0);
+                    _pixels.setRGB((_gridWidth - colIdx - 1) + rowIdx*_gridWidth, 0, 0, 0);
                 }
             }
             else
             {
                 // Get character
-                uint32_t charIdx = (curAnimColumn - _preMsgBlankCols) / (_charWidthCols + _interCharBlankCols);
-                char ch = _msg.charAt(charIdx);
+                char ch = _msg.charAt(charToDispIdx);
 
                 // Check valid
-                if (ch < LED_PATTERN_FONT_5X5_ASCII_OFFSET || ch >= LED_PATTERN_FONT_5X5_ASCII_OFFSET + LED_PATTERN_FONT_5X5_ASCII_SIZE)
+                if (ch < Font5x5::start || ch >= Font5x5::end)
                     continue;
                     
                 // Get character data
-                const uint8_t* pCharData = LEDPatternFont5x5[ch-LED_PATTERN_FONT_5X5_ASCII_OFFSET];
+                const uint8_t* pCharData = Font5x5::font[ch - Font5x5::start] + 1;
                 if (!pCharData)
                     continue;
-                if (colWithinCharIdx >= LED_PATTERN_FONT_5X5_FONT_WIDTH)
-                    continue;
-                pCharData += colWithinCharIdx;
+
+                // Set the bit mask based on the column
+                uint8_t bitMask = 0x80 >> colWithinChar;
 
                 // Draw column
-                uint8_t bitMask = 0x40;
                 for (uint32_t rowIdx = 0; rowIdx < _gridHeight; rowIdx++)
                 {
-                    uint32_t ledIdx = (_gridWidth-colIdx-1) + rowIdx*_gridWidth;
-                    _pixels.setRGB(ledIdx, (*pCharData) & bitMask ? _charColourRGB : 0);
-                    bitMask >>= 1;
+                    if (rowIdx >= Font5x5::height)
+                        break;
+                    uint32_t ledIdx = (_gridWidth - colIdx - 1) + rowIdx*_gridWidth;
+                    _pixels.setRGB(ledIdx, pCharData[rowIdx] & bitMask ? _charColourRGB : 0);
                 }
             }
         }
@@ -114,24 +145,14 @@ public:
         
         // Update animation count
         _curAnimCount++;
-        if (_curAnimCount >= totalColsWithCharData + _preMsgBlankCols + _postMsgBlankCols)
+        if (_curAnimCount >= totalCols)
             _curAnimCount = 0;
-
-        // if !preMsgBlank
-        // {
-        //     bool postMsgBlank = _curAnimCount >= (_msg.length() + PRE_MSG_BLANK_LINES + POST_MSG_BLANK_LINES);
-        //     if !postMsgBlank
-        //     {
-        //         // Get character
-        // uint32_t charIdx = _curAnimCount / INTER_CHAR_BLANK_LINES;
-        
-
-        // // if (_curState)
     }
 
 private:
     // Rate
     uint32_t _lastLoopMs = 0;
+    uint32_t _rateMultiple = 3;
 
     // Animation state
     uint32_t _curAnimCount = 0;
@@ -139,7 +160,6 @@ private:
     // Font
     uint32_t _preMsgBlankCols = 2;
     uint32_t _postMsgBlankCols = 2;
-    uint32_t _charWidthCols = 5;
     static const uint32_t _interCharBlankCols = 1;
 
     // Display grid
@@ -151,5 +171,26 @@ private:
     
     // Message
     String _msg = "Hello World!";
-};
+    std::vector<uint16_t> _msgCharNextColIdxs;
+    uint32_t _msgCharTotalWidths = 0;
 
+    // Helpers
+    bool isNewMsg()
+    {
+
+        // TODO remove
+        return true;
+
+
+        // if (!_pNamedValueProvider)
+        //     return false;
+        // // Check for new message
+        // String newMsg = _pNamedValueProvider->getString("msg", "");
+        // if (newMsg != _msg)
+        // {
+        //     _msg = newMsg;
+        //     return true;
+        // }
+        // return false;
+    }
+};

@@ -6,7 +6,11 @@ def convertChar(char, maxCharHeight):
     charBytes = bytearray()
     for line in char:
         charWidth = max(charWidth, len(line))
-        charBytes.append(int(line.replace('#', '1').replace(' ', '0') + "0", 2))
+    for line in char:
+        binaryStr = line.replace('#', '1').replace(' ', '0')
+        binaryStr = binaryStr + '0' * (charWidth - len(binaryStr))
+        binaryStr = binaryStr + '0' * (8 - len(binaryStr))
+        charBytes.append(int(binaryStr, 2))
     return charWidth, charBytes
 
 def parseFile(filename):
@@ -21,11 +25,14 @@ def parseFile(filename):
     # Each character starts with a line $xx where xx is the character code
     # The following lines are the character data made using # characters for pixels on
     # and spaces for pixels off
+    # A line starting with = sets the width of the character
     # The width of each character is variable and set by the widest line of the character
     for line in lines:
         if line.startswith('$'):
             charCode = int(line[1:], 16)
             font[charCode] = []
+        elif line.startswith('='):
+            font[charCode].append(" " * int(line[1:]))
         else:
             font[charCode].append(line.rstrip())
             maxCharHeight = max(maxCharHeight, len(font[charCode]))
@@ -37,6 +44,13 @@ def parseFile(filename):
     # Find the start and end characters
     start = min(font.keys())
     end = max(font.keys())
+
+    # Check if lower case letters are present
+    if end < 0x61:
+        # Lower case letters not present, add them by copying the upper case letters
+        for charCode in range(0x61, 0x7b):
+            font[charCode] = font[charCode - 0x20]
+        end = 0x7a
 
     return maxCharHeight, start, end, font
 
