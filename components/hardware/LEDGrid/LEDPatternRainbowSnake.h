@@ -13,8 +13,8 @@
 class LEDPatternRainbowSnake : public LEDPatternBase
 {
 public:
-    LEDPatternRainbowSnake(NamedValueProvider* pNamedValueProvider, std::vector<LEDPixel>& pixels, ESP32RMTLedStrip& ledStrip) :
-        LEDPatternBase(pNamedValueProvider, pixels, ledStrip)
+    LEDPatternRainbowSnake(NamedValueProvider* pNamedValueProvider, LEDPixels& pixels) :
+        LEDPatternBase(pNamedValueProvider, pixels)
     {
     }
     virtual ~LEDPatternRainbowSnake()
@@ -22,9 +22,9 @@ public:
     }
 
     // Build function for factory
-    static LEDPatternBase* build(NamedValueProvider* pNamedValueProvider, std::vector<LEDPixel>& pixels, ESP32RMTLedStrip& ledStrip)
+    static LEDPatternBase* build(NamedValueProvider* pNamedValueProvider, LEDPixels& pixels)
     {
-        return new LEDPatternRainbowSnake(pNamedValueProvider, pixels, ledStrip);
+        return new LEDPatternRainbowSnake(pNamedValueProvider, pixels);
     }
 
     // Setup
@@ -42,19 +42,19 @@ public:
 
         if (_curState)
         {
-            for (int pixIdx = _curIter; pixIdx < _pixels.size(); pixIdx += 3)
+            uint32_t numPix = _pixels.getNumPixels();
+            for (int pixIdx = _curIter; pixIdx < numPix; pixIdx += 3)
             {
-                uint16_t hue = pixIdx * 360 / _pixels.size() + _curHue;
-                _pixels[pixIdx].fromRGB(LEDPixHSV::toRGB(hue, 100, 10), LEDPixel::RGB, 1.0f);
+                uint16_t hue = pixIdx * 360 / numPix + _curHue;
+                _pixels.setHSV(pixIdx, hue, 100, 10);
             }
             // Show pixels
-            _ledStrip.showPixels(_pixels);
+            _pixels.show();
         }
         else
         {
-            for (auto& pix : _pixels)
-                pix.clear();
-            _ledStrip.showPixels(_pixels);
+            _pixels.clear();
+            _pixels.show();
             _curIter = (_curIter + 1) % 3;
             if (_curIter == 0)
             {
@@ -71,4 +71,3 @@ private:
     uint32_t _curIter = 0;
     uint32_t _curHue = 0;
 };
-

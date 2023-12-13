@@ -139,10 +139,10 @@ void LEDGrid::service()
 
 void LEDGrid::handleAnimationStep()
 {
-    _nextAnimStepAfterUs = 100000;
-    _ledPixels.clear();
-    _ledPixels.setPixelColor(_animationStepNum, _animationColours[_animationColourIdx]);
-    _ledPixels.show();
+    // _nextAnimStepAfterUs = 100000;
+    // _ledPixels.clear();
+    // _ledPixels.setRGB(_animationStepNum, _animationColours[_animationColourIdx]);
+    // _ledPixels.show();
 
     // LOG_I(MODULE_PREFIX, "handleAnimationStep animStep %d animColourIdx %d colour %06x", 
     //             _animationStepNum, _animationColourIdx, _animationColours[_animationColourIdx]);

@@ -15,8 +15,8 @@
 class LEDPatternScrollMsg : public LEDPatternBase
 {
 public:
-    LEDPatternScrollMsg(NamedValueProvider* pNamedValueProvider, std::vector<LEDPixel>& pixels, ESP32RMTLedStrip& ledStrip) :
-        LEDPatternBase(pNamedValueProvider, pixels, ledStrip)
+    LEDPatternScrollMsg(NamedValueProvider* pNamedValueProvider, LEDPixels& pixels) :
+        LEDPatternBase(pNamedValueProvider, pixels)
     {
     }
     virtual ~LEDPatternScrollMsg()
@@ -24,9 +24,9 @@ public:
     }
 
     // Build function for factory
-    static LEDPatternBase* build(NamedValueProvider* pNamedValueProvider, std::vector<LEDPixel>& pixels, ESP32RMTLedStrip& ledStrip)
+    static LEDPatternBase* build(NamedValueProvider* pNamedValueProvider, LEDPixels& pixels)
     {
-        return new LEDPatternScrollMsg(pNamedValueProvider, pixels, ledStrip);
+        return new LEDPatternScrollMsg(pNamedValueProvider, pixels);
     }
 
     // Setup
