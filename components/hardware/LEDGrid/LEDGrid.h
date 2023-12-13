@@ -92,4 +92,10 @@ private:
 
     // Helpers
     void handleAnimationStep();
+    uint32_t mapPixelIdxToLEDIdx(uint32_t pixelIdx)
+    {
+        if (pixelIdx >= _gridRaster.size())
+            return 0;
+        return _gridRaster[pixelIdx];
+    }
 };

@@ -27,7 +27,16 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "name": "Generate font using python",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/components/hardware/LEDGrid/GenerateFont.py",
+            "args": [
+                "${workspaceFolder}/components/hardware/LEDGrid/FontDef5x5.txt",
+                "Font5X5"
+            ],
         }
-
     ]
 }

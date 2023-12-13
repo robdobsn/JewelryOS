@@ -73,22 +73,27 @@ void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
     // Check grid raster size
     if (gridElemStrs.size() != _gridWidth * _gridHeight)
     {
+        // No grid raster specified (or wrong size)
         LOG_E(MODULE_PREFIX, "setup gridRaster size %d does not match gridWidth %d gridHeight %d", 
                     gridElemStrs.size(), _gridWidth, _gridHeight);
-        return;
     }
-
-    // Convert grid raster
-    _gridRaster.resize(gridElemStrs.size());
-    for (int elemIdx = 0; elemIdx < gridElemStrs.size(); elemIdx++)
+    else
     {
-        _gridRaster[elemIdx] = (uint8_t)gridElemStrs[elemIdx].toInt();
-    }  
+        // Convert grid raster
+        _gridRaster.resize(gridElemStrs.size());
+        for (int elemIdx = 0; elemIdx < gridElemStrs.size(); elemIdx++)
+        {
+            _gridRaster[elemIdx] = (uint8_t)gridElemStrs[elemIdx].toInt();
+        }
+
+        // Set mapping function for LED pixels
+        _ledPixels.setPixelMappingFn(std::bind(&LEDGrid::mapPixelIdxToLEDIdx, this, std::placeholders::_1));
+    }
 
     // Add patterns to LED pixels
     _ledPixels.addPattern("RainbowSnake", &LEDPatternRainbowSnake::build);
     _ledPixels.addPattern("ScrollMsg", &LEDPatternScrollMsg::build);
-    _ledPixels.setPattern("RainbowSnake");
+    _ledPixels.setPattern("ScrollMsg");
 
     // Log
 #ifdef DEBUG_LED_GRID_SETUP
@@ -227,11 +232,6 @@ void LEDGrid::preSleep()
 #ifdef HOLD_PIXEL_PINS_DURING_SLEEP
     if (_pixelPowerPin >= 0)
         gpio_hold_en((gpio_num_t)_pixelPowerPin);
-    int dataPin = _ledPixels.getDataPin();
-    if (dataPin >= 0)
-        gpio_hold_en((gpio_num_t)dataPin);
-//     }
-// #endif
 #endif
 }
 
@@ -241,8 +241,5 @@ void LEDGrid::postSleep()
 #ifdef HOLD_PIXEL_PINS_DURING_SLEEP
     if (_pixelPowerPin >= 0)
         gpio_hold_dis((gpio_num_t)_pixelPowerPin);
-    int dataPin = _ledPixels.getDataPin();
-    if (dataPin >= 0)
-        gpio_hold_dis((gpio_num_t)dataPin);
 #endif
 }
