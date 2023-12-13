@@ -1,16 +1,12 @@
-/*------------------- FONT CUT TOP HERE -------------------------------*/
-
 // A tiny 5x5 font from 
 // https://jared.geek.nz/2014/jan/custom-fonts-for-microcontrollers
-// Nice if you only have 5 strings, or if you want to connect something to the TX pin. 
-// Connect LEDs to pins 2-6
 
 #include <stdint.h>
 
-#define ASCII_OFFSET (0x20)     // ASCII code of 1st char in font array
-#define ASCII_NONPRINT (0x80)   // ASCII code of char to show for chars not included in the font (could also be a space)
-#define FONT_WIDTH 6
-const uint8_t fontdata[][FONT_WIDTH] = {
+#define LED_PATTERN_FONT_5X5_ASCII_OFFSET (0x20)     // ASCII code of 1st char in font array
+#define LED_PATTERN_FONT_5X5_ASCII_NONPRINT (0x80)   // ASCII code of char to show for chars not included in the font (could also be a space)
+#define LED_PATTERN_FONT_5X5_FONT_WIDTH 6
+const uint8_t LEDPatternFont5x5[][LED_PATTERN_FONT_5X5_FONT_WIDTH] = {
     { // ASCII 0x20 (' ')
        0b00000000,
        0b00000000,
@@ -772,4 +768,3 @@ const uint8_t fontdata[][FONT_WIDTH] = {
        0b00000000,
     },
 };
-/*------------------- FONT CUT BOTTOM HERE -------------------------------*/

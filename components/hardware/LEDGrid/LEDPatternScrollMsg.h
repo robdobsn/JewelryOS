@@ -9,6 +9,8 @@
 #pragma once
 
 #include "LEDPatternBase.h"
+#include "LEDPatternFont5x5.h"
+#include <JSONParams.h>
 
 class LEDPatternScrollMsg : public LEDPatternBase
 {
@@ -28,55 +30,63 @@ public:
     }
 
     // Setup
-    void setup()
+    virtual void setup(const char* pParamsJson = nullptr) override final
     {
+        // Check setup valid
+        if (!pParamsJson)
+            return;
+
+        // Get JSON
+        JSONParams params(pParamsJson);
+
+        // 
+
+
     }
 
     // Service
-    void service()
+    void service() override final
     {
         // Check update time
         if (!Raft::isTimeout(millis(), _lastLoopMs, _refreshRateMs))
             return;
         _lastLoopMs = millis();
 
-        // 
+        // // Calculations
+        // uint32_t totalColsWithCharData = (_msg.length() * (_charWidthCols + _interCharBlankCols) - 1);
+        // bool preMsgBlank = _curAnimCount < _preMsgBlankCols;
+        // bool postMsgBlank = _curAnimCount >= totalColsWithCharData + _preMsgBlankCols;
+        // uint32_t charIdx = (_curAnimCount - _preMsgBlankCols) / (_charWidthCols + _interCharBlankCols);
+        // uint32_t colWithinCharIdx = (_curAnimCount - _preMsgBlankCols) % (_charWidthCols + _interCharBlankCols);
+        // bool interCharBlank = colWithinCharIdx >= _charWidthCols;
+        
+        // // Handle display
 
-        if (_curState)
-        {
-            for (int pixIdx = _curIter; pixIdx < _pixels.size(); pixIdx += 3)
-            {
-                uint16_t hue = pixIdx * 360 / _pixels.size() + _curHue;
-                _pixels[pixIdx].fromRGB(LEDPixHSV::toRGB(hue, 100, 10), LEDPixel::RGB, 1.0f);
-            }
-            // Show pixels
-            _ledStrip.showPixels(_pixels);
-        }
-        else
-        {
-            for (auto& pix : _pixels)
-                pix.clear();
-            _ledStrip.showPixels(_pixels);
-            _curIter = (_curIter + 1) % 3;
-            if (_curIter == 0)
-            {
-                _curHue += 60;
-            }
-        }
-        _curState = !_curState;
+
+        // if !preMsgBlank
+        // {
+        //     bool postMsgBlank = _curAnimCount >= (_msg.length() + PRE_MSG_BLANK_LINES + POST_MSG_BLANK_LINES);
+        //     if !postMsgBlank
+        //     {
+        //         // Get character
+        // uint32_t charIdx = _curAnimCount / INTER_CHAR_BLANK_LINES;
+        
+
+        // // if (_curState)
     }
 
 private:
-    // State
+    // Rate
     uint32_t _lastLoopMs = 0;
-    bool _curState = false;
-    uint32_t _curIter = 0;
-    uint32_t _curHue = 0;
+
+    // Animation state
+    uint32_t _curAnimCount = 0;
 
     // Font
-    static const uint32_t PRE_MSG_BLANK_LINES = 2;
-    static const uint32_t POST_MSG_BLANK_LINES = 2;
-    static const uint32_t POST_CHAR_BLANK_LINES = 1;
+    uint32_t _preMsgBlankCols = 2;
+    uint32_t _postMsgBlankCols = 2;
+    uint32_t _charWidthCols = 5;
+    static const uint32_t _interCharBlankCols = 1;
     
     // Message
     String _msg;

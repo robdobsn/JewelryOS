@@ -95,6 +95,20 @@
                         {"__hwRevs__": [3], "__value__":6},
                         {"__hwRevs__": [4], "__value__":5}
                     ],
+                    "gridWidth":
+                    [
+                        {"__hwRevs__": [3], "__value__":5},
+                        {"__hwRevs__": [4], "__value__":5}
+                    ],
+                    "gridHeight":
+                    [
+                        {"__hwRevs__": [3], "__value__":5},
+                        {"__hwRevs__": [4], "__value__":5}
+                    ],
+                    "gridRaster":
+                    [
+                        {"__hwRevs__": [3,4], "__value__":[4,3,2,1,0,5,6,7,8,9,14,13,12,11,10,15,16,17,18,10,24,23,22,21,20]}
+                    ],
                     "pixelPowerActiveLevel": true,
                     "pixelDataPin": 10,
                     "numPixels": 25,

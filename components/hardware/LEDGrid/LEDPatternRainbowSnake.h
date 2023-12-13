@@ -28,12 +28,12 @@ public:
     }
 
     // Setup
-    void setup()
+    virtual void setup(const char* pParamsJson = nullptr) override final
     {
     }
 
     // Service
-    void service()
+    virtual void service() override final
     {
         // Check update time
         if (!Raft::isTimeout(millis(), _lastLoopMs, _refreshRateMs))

@@ -38,6 +38,24 @@ public:
     // Get time to next animation step
     uint32_t getTimeToNextAnimStepUs();
 
+    // Layout
+    uint32_t getGridWidth() const
+    {
+        return _gridWidth;
+    }
+    uint32_t getGridHeight() const
+    {
+        return _gridHeight;
+    }
+    uint32_t getGridSize() const
+    {
+        return _gridWidth * _gridHeight;
+    }
+    uint32_t getGridIdx(uint32_t x, uint32_t y) const
+    {
+        return y * _gridWidth + x;
+    }
+
 private:
 
     // Brightness level
@@ -66,6 +84,11 @@ private:
     // Colour for animation
     uint32_t _animationColourIdx = 0;
     static constexpr uint32_t _animationColours[] = { 0x0000ff, 0x00ff00, 0xff0000, 0x00ffff, 0xff00ff, 0xffff00, 0xffffff };
+
+    // Grid size and raster layout
+    uint32_t _gridWidth = 0;
+    uint32_t _gridHeight = 0;
+    std::vector<uint8_t> _gridRaster;
 
     // Helpers
     void handleAnimationStep();

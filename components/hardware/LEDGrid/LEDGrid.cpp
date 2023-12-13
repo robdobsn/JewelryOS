@@ -62,6 +62,29 @@ void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
     _animationCount = _ledPixels.getNumPixels();
     _nextAnimStepAfterUs = 100000;
 
+    // Get LED grid size
+    _gridWidth = config.getLong("gridWidth", 0, pConfigPrefix);
+    _gridHeight = config.getLong("gridHeight", 0, pConfigPrefix);
+
+    // Extract grid raster layout
+    std::vector<String> gridElemStrs;
+    config.getArrayElems("gridRaster", gridElemStrs, pConfigPrefix);
+
+    // Check grid raster size
+    if (gridElemStrs.size() != _gridWidth * _gridHeight)
+    {
+        LOG_E(MODULE_PREFIX, "setup gridRaster size %d does not match gridWidth %d gridHeight %d", 
+                    gridElemStrs.size(), _gridWidth, _gridHeight);
+        return;
+    }
+
+    // Convert grid raster
+    _gridRaster.resize(gridElemStrs.size());
+    for (int elemIdx = 0; elemIdx < gridElemStrs.size(); elemIdx++)
+    {
+        _gridRaster[elemIdx] = (uint8_t)gridElemStrs[elemIdx].toInt();
+    }  
+
     // Add patterns to LED pixels
     _ledPixels.addPattern("RainbowSnake", &LEDPatternRainbowSnake::build);
     _ledPixels.addPattern("ScrollMsg", &LEDPatternScrollMsg::build);
@@ -223,4 +246,3 @@ void LEDGrid::postSleep()
         gpio_hold_dis((gpio_num_t)dataPin);
 #endif
 }
-
