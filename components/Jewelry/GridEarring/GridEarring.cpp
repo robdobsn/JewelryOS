@@ -11,6 +11,8 @@
 
 static const char *MODULE_PREFIX = "GridEarring";
 
+#define SLEEP_BETWEEN_ANIMATION_STEPS
+
 GridEarring::GridEarring()
 {
 }
@@ -27,6 +29,9 @@ void GridEarring::setup(const ConfigBase& config, const char* pConfigPrefix)
     // Setup LED grid
     _ledGrid.setup(config, (configPrefix + "LEDGrid").c_str());
 
+    // // Setup microphone
+    // _microphone.setup(config, (configPrefix + "Microphone").c_str());
+
     // Set initialized
     _isInitialized = true;
 }
@@ -40,6 +45,9 @@ void GridEarring::service()
     // Service
     _ledGrid.service();
 
+    // // Microphone
+    // _microphone.service();
+
     // Get time to next animation step
     // UINT32_MAX means that animation has finished
     uint32_t timeToNextAnimStepUs = _ledGrid.getTimeToNextAnimStepUs();
@@ -49,17 +57,20 @@ void GridEarring::service()
     // Cbeck animation complete
     _ledGrid.waitAnimComplete();
 
-    // TODO PUT BACK
+    // TODO - remove
+    delay(2);
 
-    // // Pre-sleep
-    // _ledGrid.preSleep();
+#ifdef SLEEP_BETWEEN_ANIMATION_STEPS
+    // Pre-sleep
+    _ledGrid.preSleep();
 
-    // // Sleep for time to next animation step
-    // esp_sleep_enable_timer_wakeup(timeToNextAnimStepUs);
-    // esp_light_sleep_start();    
+    // Sleep for time to next animation step
+    esp_sleep_enable_timer_wakeup(timeToNextAnimStepUs);
+    esp_light_sleep_start();    
 
-    // // Post-sleep
-    // _ledGrid.postSleep();
+    // Post-sleep
+    _ledGrid.postSleep();
+#endif
 }
 
 void GridEarring::shutdown()
@@ -70,4 +81,7 @@ void GridEarring::shutdown()
 
     // Shutdown LED grid
     _ledGrid.shutdown();
+
+    // // Shutdown microphone
+    // _microphone.teardown();
 }

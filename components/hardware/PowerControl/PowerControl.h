@@ -42,7 +42,8 @@ private:
     // VSENSE threshold when button is pressed
     static const uint32_t VSENSE_BUTTON_PRESSED_THRESHOLD = 2300;
 
-    // VSENSE to voltage conversion
+    // VSENSE to voltage conversion for Heart Earrings
+    // Note that this is overridden by values in the sysTypes if present
     // Measurements from multimeter
     // 3.584V = 1600
     // 3.697V = 1659
@@ -52,7 +53,10 @@ private:
     // 4.107V = 1845
     // 4.203V = 1887
     // Using excel to fit a curve with 0 intercept ...
-    static constexpr float VSENSE_TO_VOLTAGE = 448.5;
+    static constexpr float VSENSE_SLOPE_DEFAULT = 0.00223;
+    static constexpr float VSENSE_INTERCEPT_DEFAULT = 0.0;
+    double _vsenseSlope = VSENSE_SLOPE_DEFAULT;
+    double _vsenseIntercept = VSENSE_INTERCEPT_DEFAULT;
 
     // Shutdown due to battery low threshold
     static constexpr float BATTERY_LOW_THRESHOLD = 3.55;

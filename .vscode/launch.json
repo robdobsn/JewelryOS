@@ -37,6 +37,16 @@
                 "${workspaceFolder}/components/hardware/LEDGrid/Font5x5.txt",
                 "Font5x5"
             ],
+        },
+        {
+            "name": "Test generate JSON from SysTypes.json using python",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/json2header.py",
+            "args": [
+                "${workspaceFolder}/buildConfigs/JewelOS/SysTypes.json",
+                "${workspaceFolder}/TESTOUTPUT_SysTypes.json"
+            ],
         }
     ]
 }

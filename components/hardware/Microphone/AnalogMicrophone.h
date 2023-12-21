@@ -1,6 +1,6 @@
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // //
-// // MCMicrophone.h
+// // AnalogMicrophone.h
 // //
 // // Rob Dobson 2023
 // //
@@ -18,11 +18,11 @@
 // #include "MP3EncoderLAME.h"
 // #endif
 
-// class MCMicrophone
+// class AnalogMicrophone
 // {
 // public:
-//     MCMicrophone();
-//     virtual ~MCMicrophone();
+//     AnalogMicrophone();
+//     virtual ~AnalogMicrophone();
 
 //     // Setup and teardown
 //     void setup(ConfigBase& config, const char* pConfigPrefix);
@@ -36,13 +36,10 @@
 
 // private:
 //     // Singleton
-//     static MCMicrophone* _pThis;
+//     static AnalogMicrophone* _pThis;
 
 //     // Is setup
 //     bool _isSetup = false;
-
-//     // I2S chanhandle
-//     i2s_chan_handle_t _i2sChanHandle = nullptr;
 
 //     // Microphone config class
 //     class MicrophoneConfig
@@ -50,6 +47,7 @@
 //     public:
 //         // Microphone type
 //         bool isPDM = false;
+//         bool isAnalog = false;
 
 //         // Sample rate
 //         uint32_t sampleRate = 0;
@@ -61,6 +59,12 @@
 //         int i2sDataBitsPerSample = 16;
 //         int i2sNumChannels = 1;
 
+//         // Analog signal config
+//         int signalPin = -1;
+
+//         // Power pin
+//         int powerPin = -1;
+
 //         // MP3 quality
 //         int mp3Quality = 5;
 
@@ -68,6 +72,9 @@
 
 //     // Microphone config
 //     MicrophoneConfig _micConfig;
+
+//     // ADC handle
+//     adc_continuous_handle_t _adcContHandle = nullptr;
 
 // #ifdef INCLUDE_LAME_MP3_ENCODER
 //     // MP3 encoder

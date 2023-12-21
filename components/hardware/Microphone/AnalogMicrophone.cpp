@@ -1,6 +1,6 @@
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // //
-// // MCMicrophone.cpp
+// // AnalogMicrophone.cpp
 // //
 // // Rob Dobson 2023
 // //
@@ -13,26 +13,16 @@
 // #include "esp_system.h"
 // #include "freertos/FreeRTOS.h"
 // #include "freertos/task.h"
-// #include "driver/i2s_std.h"
-// #include "driver/i2s_pdm.h"
 // #include "driver/gpio.h"
 // #include "format_wav.h"
-// #include "MCMicrophone.h"
+// #include "AnalogMicrophone.h"
 // #include "Logger.h"
 // #include "FileSystem.h"
 // #include "math.h"
+// #include "esp_adc/adc_continuous.h"
 
-// #define DEBUG_TEST_ENCODE_SINE_WAVE_FREQ 440
+// // #define DEBUG_TEST_ENCODE_SINE_WAVE_FREQ 440
 
-// // TODO
-// // static const bool MIC_IS_PDM = true;
-// // #define CONFIG_EXAMPLE_I2S_BCLK_GPIO ((gpio_num_t)40)
-// // #define CONFIG_EXAMPLE_I2S_DATA_GPIO ((gpio_num_t)41)
-// // #define CONFIG_EXAMPLE_I2S_LRCK_GPIO ((gpio_num_t)42)
-// // #define CONFIG_EXAMPLE_SAMPLE_RATE 32000
-// // #define CONFIG_EXAMPLE_BIT_SAMPLE 16
-// #define SPI_DMA_CHAN        SPI_DMA_CH_AUTO
-// // #define NUM_CHANNELS        (1) // For mono recording only!
 // #define FS_MOUNT_POINT      "/local"
 // // #define SAMPLE_SIZE         (CONFIG_EXAMPLE_BIT_SAMPLE * 1024)
 // // #define BYTE_RATE           (CONFIG_EXAMPLE_SAMPLE_RATE * (CONFIG_EXAMPLE_BIT_SAMPLE / 8)) * NUM_CHANNELS
@@ -43,12 +33,12 @@
 // // const int MP3_CHANNELS = 1;
 
 
-// static const char *MODULE_PREFIX = "MCMicrophone";
+// static const char *MODULE_PREFIX = "AnalogMicrophone";
 
-// MCMicrophone* MCMicrophone::_pThis = nullptr;
+// AnalogMicrophone* AnalogMicrophone::_pThis = nullptr;
 
 // // Constructor
-// MCMicrophone::MCMicrophone()
+// AnalogMicrophone::AnalogMicrophone()
 // #ifdef INCLUDE_LAME_MP3_ENCODER
 //     : _mp3Encoder(mp3EncoderCallbackStatic)
 // #endif
@@ -57,24 +47,30 @@
 // }
 
 // // Destructor
-// MCMicrophone::~MCMicrophone()
+// AnalogMicrophone::~AnalogMicrophone()
 // {
 //     teardown();
 // }
 
-// void MCMicrophone::setup(ConfigBase& config, const char* pConfigPrefix)
+// void AnalogMicrophone::setup(ConfigBase& config, const char* pConfigPrefix)
 // {
 //     // Microphone type
-//     _micConfig.isPDM = config.getBool("isPDM", false, pConfigPrefix);
+//     _micConfig.isAnalog = config.getBool("isAnalog", false, pConfigPrefix);
+
+//     // This class only supports analog microphones
+//     if (!_micConfig.isAnalog)
+//     {
+//         LOG_E(MODULE_PREFIX, "setup FAILED - only analog microphones supported");
+//         return;
+//     }
 
 //     // Sample rate
-//     _micConfig.sampleRate = config.getLong("sampleRate", 32000, pConfigPrefix);
+//     _micConfig.sampleRate = config.getLong("sampleRate", 8000, pConfigPrefix);
 
-//     // I2S config
-//     _micConfig.i2sDataPin = config.getLong("i2sDataPin", -1, pConfigPrefix);
-//     _micConfig.i2sBCLKPin = config.getLong("i2sBCLKPin", -1, pConfigPrefix);
-//     _micConfig.i2sLRCLKPin = config.getLong("i2sLRCLKPin", -1, pConfigPrefix);
-//     _micConfig.i2sDataBitsPerSample = config.getLong("i2sDataBitsPerSample", 16, pConfigPrefix);
+//     // Power and signal pins
+//     _micConfig.powerPin = config.getLong("powerPin", -1, pConfigPrefix);
+//     _micConfig.signalPin = config.getLong("signalPin", -1, pConfigPrefix);
+
 
 // #ifdef INCLUDE_LAME_MP3_ENCODER
 //     // MP3 config
@@ -89,47 +85,56 @@
 // // Apply setup
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// bool MCMicrophone::applySetup(const ConfigBase& configOverride, const char* pConfigPrefix)
+// bool AnalogMicrophone::applySetup(const ConfigBase& configOverride, const char* pConfigPrefix)
 // {
 //     // Teardown if already setup
 //     teardown();
 
 //     // Check pins valid
-//     if (_micConfig.i2sDataPin < 0 || _micConfig.i2sBCLKPin < 0 || _micConfig.i2sLRCLKPin < 0)
+//     if (_micConfig.signalPin < 0)
 //     {
-//         LOG_E(MODULE_PREFIX, "setup FAILED - invalid pins DATA %d BCLK %d LRCLK %d",
-//                 _micConfig.i2sDataPin, _micConfig.i2sBCLKPin, _micConfig.i2sLRCLKPin);
+//         LOG_E(MODULE_PREFIX, "setup FAILED - invalid pin signal %d", _micConfig.signalPin);
 //         return false;
 //     }
 
-//     // Channel config
-//     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
-//     ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, NULL, &_i2sChanHandle));
-
 //     // Setup the I2S
-//     if (_micConfig.isPDM)
+//     if (_micConfig.isAnalog)
 //     {
-//         // Setup PDM microphone - LRCLK pin LOW indicates data valid up-to rising edge of BCLK
-//         pinMode(_micConfig.i2sLRCLKPin, OUTPUT);
-//         digitalWrite(_micConfig.i2sLRCLKPin, LOW);
+//         // Check if power pin used
+//         if (_micConfig.powerPin >= 0)
+//         {
+//             // Power on
+//             pinMode(_micConfig.powerPin, OUTPUT);
+//             digitalWrite(_micConfig.powerPin, HIGH);
+//         }
 
-//         // Setup I2S PDM RX
-//         i2s_pdm_rx_config_t pdm_rx_cfg  = {
-//             .clk_cfg = I2S_PDM_RX_CLK_DEFAULT_CONFIG(_micConfig.sampleRate),
-//             // The default mono slot is the left slot (whose 'select/LR pin' of the I2S PDM microphone is pulled down)
-//             // Note that the cast below assumes that the enumeration i2s_data_bit_width_t has the same values as the bit width
-//             .slot_cfg = I2S_PDM_RX_SLOT_DEFAULT_CONFIG((i2s_data_bit_width_t)_micConfig.i2sDataBitsPerSample, I2S_SLOT_MODE_MONO),
-//             .gpio_cfg = {
-//                 .clk = (gpio_num_t)_micConfig.i2sBCLKPin,
-//                 .din = (gpio_num_t)_micConfig.i2sDataPin,
-//                 .invert_flags = {
-//                     .clk_inv = false,
-//                 },
-//             },
+//         // Setup ADC
+//         adc_continuous_handle_cfg_t adc_config = {
+//             .max_store_buf_size = 1024,
+//             .conv_frame_size = 256,
 //         };
+//         ESP_ERROR_CHECK(adc_continuous_new_handle(&adc_config, &handle));
 
-//         // Initialize the I2S
-//         ESP_ERROR_CHECK(i2s_channel_init_pdm_rx_mode(_i2sChanHandle, &pdm_rx_cfg));
+//         adc_continuous_config_t dig_cfg = {
+//             .sample_freq_hz = _micConfig.sampleRate,
+//             .conv_mode = ADC_CONV_SINGLE_UNIT_1,
+//             .format = ADC_DIGI_OUTPUT_FORMAT_TYPE1,
+//         };
+//         adc_digi_pattern_config_t adc_pattern[SOC_ADC_PATT_LEN_MAX] = {0};
+//         dig_cfg.pattern_num = channel_num;
+//         for (int i = 0; i < channel_num; i++) {
+//             adc_pattern[i].atten = EXAMPLE_ADC_ATTEN;
+//             adc_pattern[i].channel = channel[i] & 0x7;
+//             adc_pattern[i].unit = EXAMPLE_ADC_UNIT;
+//             adc_pattern[i].bit_width = EXAMPLE_ADC_BIT_WIDTH;
+
+//             ESP_LOGI(TAG, "adc_pattern[%d].atten is :%"PRIx8, i, adc_pattern[i].atten);
+//             ESP_LOGI(TAG, "adc_pattern[%d].channel is :%"PRIx8, i, adc_pattern[i].channel);
+//             ESP_LOGI(TAG, "adc_pattern[%d].unit is :%"PRIx8, i, adc_pattern[i].unit);
+//         }
+//         dig_cfg.adc_pattern = adc_pattern;
+//         ESP_ERROR_CHECK(adc_continuous_config(handle, &dig_cfg));        
+
 //     }
 //     else
 //     {
@@ -183,7 +188,7 @@
 // // Teardown
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// void MCMicrophone::teardown()
+// void AnalogMicrophone::teardown()
 // {
 //     // Check if already setup
 //     if (!_isSetup)
@@ -209,7 +214,7 @@
 // // Service
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// void MCMicrophone::service()
+// void AnalogMicrophone::service()
 // {
 // }
 
@@ -217,7 +222,7 @@
 // // Capture to file
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// bool MCMicrophone::captureToFile(const char* filename, uint32_t recTimeSecs)
+// bool AnalogMicrophone::captureToFile(const char* filename, uint32_t recTimeSecs)
 // {
 //     // Check setup
 //     if (!_isSetup)
@@ -378,7 +383,7 @@
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // #ifdef INCLUDE_LAME_MP3_ENCODER
-// void MCMicrophone::mp3EncoderCallback(uint8_t* pBuf, size_t bufLen)
+// void AnalogMicrophone::mp3EncoderCallback(uint8_t* pBuf, size_t bufLen)
 // {
 //     // LOG_I(MODULE_PREFIX, "MP3 encoder callback %d", bufLen);
 //     if (_pDebugFile)
@@ -405,7 +410,7 @@
 // // Get samples
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// uint32_t MCMicrophone::getSamples(uint8_t* pBuf, uint32_t bufLen)
+// uint32_t AnalogMicrophone::getSamples(uint8_t* pBuf, uint32_t bufLen)
 // {
 // #ifdef DEBUG_TEST_ENCODE_SINE_WAVE_FREQ
 

@@ -10,6 +10,7 @@
 
 #include "JewelryBase.h"
 #include "LEDGrid.h"
+// #include "AnalogMicrophone.h"
 
 class GridEarring : public JewelryBase
 {
@@ -32,5 +33,8 @@ private:
 
     // LED grid
     LEDGrid _ledGrid;
+
+    // // Microphone
+    // AnalogMicrophone _microphone;
     
 };

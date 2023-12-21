@@ -17,13 +17,6 @@
         },
         "LogManager": {
             "logDests": [
-                {
-                    "enable": false,
-                    "type": "Papertrail",
-                    "host": "logs2.papertrailapp.com",
-                    "port": 48992,
-                    "sysName": "JewelOS"
-                }
             ]
         },
         "ProtExchg": {
@@ -59,6 +52,18 @@
             "timezone": "UTC",
             "logLevel": "D"
         },
+        "FileManager": {
+            "SPIFFSEnabled": 1,
+            "LittleFSEnabled": 0,
+            "LocalFSFormatIfCorrupt": 1,
+            "CacheFileSysInfo": 0,
+            "SDEnabled": 0,
+            "DefaultSD": 1,
+            "SDMOSI": 15,
+            "SDMISO": 4,
+            "SDCLK": 14,
+            "SDCS": 13
+        },        
         "Jewelry": {
             "hardwareType":
             [
@@ -118,6 +123,13 @@
                             "num": 25
                         }
                     ]
+                },
+                "Microphone":
+                {
+                    "isAnalog": true,
+                    "powerPin": 2,
+                    "signalPin": 1,
+                    "sampleRate": 8000
                 }
             },
             "PowerControl":
@@ -133,6 +145,18 @@
                     {"__hwRevs__": [2], "__value__":4},
                     {"__hwRevs__": [3], "__value__":3},
                     {"__hwRevs__": [4], "__value__":4}
+                ],
+                "adcCalib":
+                [
+                    {"__hwRevs__": [2], "__value__":
+                        { "v1":3.584, "a1":1600, "v2":4.203, "a2":1887 }
+                    },
+                    {"__hwRevs__": [3], "__value__":
+                        { "v1":3.8, "a1":1550, "v2":4.2, "a2":1850 }
+                    },
+                    {"__hwRevs__": [4], "__value__":
+                        { "v1":3.8, "a1":1550, "v2":4.14, "a2":1765 }
+                    }
                 ]
             }
         },

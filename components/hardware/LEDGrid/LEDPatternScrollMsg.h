@@ -170,7 +170,7 @@ private:
     uint32_t _charColourRGB = 0x100000;
     
     // Message
-    String _msg = "Hello World!";
+    String _msg = "I Love You XXX";
     std::vector<uint16_t> _msgCharNextColIdxs;
     uint32_t _msgCharTotalWidths = 0;
 

@@ -18,7 +18,7 @@ static const char *MODULE_PREFIX = "Jewelry";
 
 // Comment the following line to stop the power control function keeping the board alive
 // and turning off the board on low battery
-// #define ENABLE_POWER_CONTROL
+#define ENABLE_POWER_CONTROL
 
 // Debug
 // #define DEBUG_MAIN_LOOP

@@ -4,7 +4,7 @@ idf_component_register(
                   "PowerControl/PowerControl.cpp"
                   "LEDHeart/LEDHeart.cpp"
                   "LEDGrid/LEDGrid.cpp"
-                  "Microphone/MCMicrophone.cpp"                  
+                  "Microphone/AnalogMicrophone.cpp"                  
                 INCLUDE_DIRS
                   "MAX30101"
                   "PowerControl"

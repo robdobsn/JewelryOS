@@ -128,10 +128,12 @@ static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in 
 #include <CommsChannelManager.h>
 #include <ProtocolExchange.h>
 
+// File manager
+#include <FileManager.h>
+
 #ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
 #include "SampleCollectorJSON.h"
 #include <SerialConsole.h>
-#include <FileManager.h>
 #include <NetworkManager.h>
 #include <WebServer.h>
 // #include <LogManager.h>
@@ -238,6 +240,10 @@ extern "C" void app_main(void)
     // ProtocolExchange
     ProtocolExchange _protocolExchange("ProtExchg", defaultSystemConfig, &_sysTypeConfig, nullptr);
 
+    // FileManager
+    FileManager _fileManager("FileManager", defaultSystemConfig, &_sysTypeConfig, nullptr);
+    _fileManager.setProtocolExchange(_protocolExchange);
+
     // Sample collector
 #ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
     SampleCollectorJSON _sampleCollector("HRMSamples", defaultSystemConfig, &_sysTypeConfig, nullptr);
@@ -245,10 +251,6 @@ extern "C" void app_main(void)
 
     // SerialConsole
     SerialConsole _serialConsole("SerialConsole", defaultSystemConfig, &_sysTypeConfig, nullptr);
-
-    // FileManager
-    FileManager _fileManager("FileManager", defaultSystemConfig, &_sysTypeConfig, nullptr);
-    _fileManager.setProtocolExchange(_protocolExchange);
 
     // NetworkManager
     NetworkManager _networkManager("NetMan", defaultSystemConfig, &_sysTypeConfig, nullptr);
