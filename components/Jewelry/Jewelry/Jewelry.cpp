@@ -8,7 +8,7 @@
 
 #include "Jewelry.h"
 #include "RaftUtils.h"
-#include "JSONParams.h"
+#include "RaftJson.h"
 #include "HeartEarring.h"
 #include "GridEarring.h"
 #include <RestAPIEndpointManager.h>
@@ -27,8 +27,8 @@ static const char *MODULE_PREFIX = "Jewelry";
 // Constructor / Destructor
 ///////////////////////////////////////////////////////////////////////////////
 
-Jewelry::Jewelry(const char *pModuleName, ConfigBase &defaultConfig, ConfigBase *pGlobalConfig, ConfigBase *pMutableConfig) :
-    SysModBase(pModuleName, defaultConfig, pGlobalConfig, pMutableConfig)
+Jewelry::Jewelry(const char *pModuleName, RaftJsonIF& sysConfig) :
+    SysModBase(pModuleName, sysConfig)
 {
 }
 
@@ -47,7 +47,8 @@ void Jewelry::setup()
 
 #ifdef ENABLE_POWER_CONTROL
     // Setup power control
-    _powerControl.setup(configGetConfig(), "PowerControl");
+    RaftJsonPrefixed powerControlConfig(configGetConfig(), "PowerControl");
+    _powerControl.setup(powerControlConfig);
 #endif
 
     // TODO - PUT BACK
@@ -64,7 +65,8 @@ void Jewelry::setup()
     // {
         // Setup grid earring
         _pJewelry = new GridEarring();
-        _pJewelry->setup(configGetConfig(), "GridEarring");
+        RaftJsonPrefixed gridConfig(modConfig(), "GridEarring");
+        _pJewelry->setup(gridConfig);
     // }
 
     // Debug
@@ -149,7 +151,7 @@ RaftRetCode Jewelry::apiControl(const String &reqStr, String &respStr, const API
     std::vector<String> params;
     std::vector<RaftJson::NameValuePair> nameValues;
     RestAPIEndpointManager::getParamsAndNameValues(reqStr.c_str(), params, nameValues);
-    JSONParams nameValueParamsJson = RaftJson::getJSONFromNVPairs(nameValues, true);
+    RaftJson nameValueParamsJson = RaftJson::getJSONFromNVPairs(nameValues, true);
 
     // Debug
     LOG_I(MODULE_PREFIX, "apiControl %s", reqStr.c_str());

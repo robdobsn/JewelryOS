@@ -39,14 +39,14 @@ LEDGrid::~LEDGrid()
 // Setup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
+void LEDGrid::setup(const RaftJsonIF& config)
 {
     // Get the pixel power control pin
-    String pixelPowerPin = config.getString("pixelPowerPin", "", pConfigPrefix);
+    String pixelPowerPin = config.getString("pixelPowerPin", "");
     _pixelPowerPin = ConfigPinMap::getPinFromName(pixelPowerPin.c_str());
 
     // Pixel power control active level
-    _pixelPowerActiveLevel = config.getBool("pixelPowerActiveLevel", true, pConfigPrefix);
+    _pixelPowerActiveLevel = config.getBool("pixelPowerActiveLevel", true);
 
     // Turn on power to LED pixels
     if (_pixelPowerPin >= 0)
@@ -56,19 +56,19 @@ void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
     }
 
     // Get LED pins
-    bool rslt = _ledPixels.setup(config, pConfigPrefix);
+    bool rslt = _ledPixels.setup(config);
 
     // Set animation count & timing
     _animationCount = _ledPixels.getNumPixels();
     _nextAnimStepAfterUs = 100000;
 
     // Get LED grid size
-    _gridWidth = config.getLong("gridWidth", 0, pConfigPrefix);
-    _gridHeight = config.getLong("gridHeight", 0, pConfigPrefix);
+    _gridWidth = config.getLong("gridWidth", 0);
+    _gridHeight = config.getLong("gridHeight", 0);
 
     // Extract grid raster layout
     std::vector<String> gridElemStrs;
-    config.getArrayElems("gridRaster", gridElemStrs, pConfigPrefix);
+    config.getArrayElems("gridRaster", gridElemStrs);
 
     // Check grid raster size
     if (gridElemStrs.size() != _gridWidth * _gridHeight)
@@ -97,9 +97,9 @@ void LEDGrid::setup(const ConfigBase& config, const char* pConfigPrefix)
 
     // Log
 #ifdef DEBUG_LED_GRID_SETUP
-    LOG_I(MODULE_PREFIX, "setup %s numPixels %d pixelPowerPin %d activeLevel %s configPrefix %s", 
+    LOG_I(MODULE_PREFIX, "setup %s numPixels %d pixelPowerPin %d activeLevel %s", 
                 rslt ? "OK" : "FAILED", _ledPixels.getNumPixels(),
-                _pixelPowerPin, _pixelPowerActiveLevel ? "HIGH" : "LOW", pConfigPrefix);
+                _pixelPowerPin, _pixelPowerActiveLevel ? "HIGH" : "LOW");
 #endif
 }
 

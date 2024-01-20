@@ -10,7 +10,7 @@
 
 #include "LEDPatternBase.h"
 #include "Font5x5.h"
-#include <JSONParams.h>
+#include "RaftJson.h"
 
 class LEDPatternScrollMsg : public LEDPatternBase
 {
@@ -37,7 +37,7 @@ public:
             return;
 
         // Get JSON
-        JSONParams params(pParamsJson);
+        RaftJson params(pParamsJson);
     }
 
     // Service

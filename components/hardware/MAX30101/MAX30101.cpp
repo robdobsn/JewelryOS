@@ -9,8 +9,8 @@
 #include "MAX30101.h"
 #include "RaftI2CCentral.h"
 #include <RaftUtils.h>
-#include <ConfigBase.h>
 #include <ConfigPinMap.h>
+#include <RaftJsonIF.h>
 #include <driver/gpio.h>
 
 // Module prefix
@@ -40,7 +40,7 @@ MAX30101::~MAX30101()
 // Setup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MAX30101::setup(const ConfigBase& config, const char* pConfigPrefix, RaftI2CCentralIF* pI2C)
+void MAX30101::setup(const RaftJsonIF& config, RaftI2CCentralIF* pI2C)
 {
     // Store I2C
     _pI2C = pI2C;
@@ -53,25 +53,25 @@ void MAX30101::setup(const ConfigBase& config, const char* pConfigPrefix, RaftI2
     }
 
     // Get address
-    _i2cAddr = config.getLong("i2cAddr", MAX30101_DEFAULT_I2C_ADDR, pConfigPrefix);
+    _i2cAddr = config.getLong("i2cAddr", MAX30101_DEFAULT_I2C_ADDR);
 
     // Get red LED intensity (used for HRM)
-    _redLedIntensity = config.getLong("redLedIntensity", MAX30101_DEFAULT_RED_LED_INTENSITY, pConfigPrefix);
+    _redLedIntensity = config.getLong("redLedIntensity", MAX30101_DEFAULT_RED_LED_INTENSITY);
 
     // Sample average
-    _sampleAverage = config.getLong("sampleAverage", MAX30101_DEFAULT_SAMPLE_AVERAGE, pConfigPrefix);
+    _sampleAverage = config.getLong("sampleAverage", MAX30101_DEFAULT_SAMPLE_AVERAGE);
 
     // Sample rate
-    _sampleRateHz = config.getLong("sampleRateHz", MAX30101_DEFAULT_SAMPLE_RATE_HZ, pConfigPrefix);
+    _sampleRateHz = config.getLong("sampleRateHz", MAX30101_DEFAULT_SAMPLE_RATE_HZ);
 
     // Pulse width
-    _pulseWidthUs = config.getLong("pulseWidthUs", MAX30101_DEFAULT_PULSE_WIDTH, pConfigPrefix);
+    _pulseWidthUs = config.getLong("pulseWidthUs", MAX30101_DEFAULT_PULSE_WIDTH);
 
     // FIFO almost full threshold
-    _fifoAlmostFullThreshold = config.getLong("fifoAlmostFullThreshold", MAX30101_DEFAULT_FIFO_A_THRESHOLD, pConfigPrefix);
+    _fifoAlmostFullThreshold = config.getLong("fifoAlmostFullThreshold", MAX30101_DEFAULT_FIFO_A_THRESHOLD);
 
     // ADC range
-    _adcRange = config.getLong("adcRange", MAX30101_DEFAULT_ADC_RANGE, pConfigPrefix);
+    _adcRange = config.getLong("adcRange", MAX30101_DEFAULT_ADC_RANGE);
 
     // FIFO full pin
     String pinName = config.getString("fifoFullPin", "");
@@ -79,7 +79,7 @@ void MAX30101::setup(const ConfigBase& config, const char* pConfigPrefix, RaftI2
     pinMode(_fifoFullPin, INPUT);
 
     // Wakeup on FIFO full
-    _wakeupOnFifoFull = config.getBool("wakeupOnFifoFull", true, pConfigPrefix);
+    _wakeupOnFifoFull = config.getBool("wakeupOnFifoFull", true);
 
     // Calculate interval between samples
     _sampleIntervalMs = (uint32_t) (1000 / (1.0 * _sampleRateHz / _sampleAverage));

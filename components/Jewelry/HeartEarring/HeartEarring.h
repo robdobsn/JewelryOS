@@ -23,7 +23,7 @@ public:
     virtual ~HeartEarring();
 
     // Setup
-    virtual void setup(const ConfigBase& config, const char* pConfigPrefix) override final;
+    virtual void setup(const RaftJsonIF& config) override final;
 
     // Service
     virtual void service() override final;

@@ -8,6 +8,7 @@
 
 #include "HeartEarring.h"
 #include "ConfigPinMap.h"
+#include "RaftJsonPrefixed.h"
 #include "esp_sleep.h"
 
 static const char *MODULE_PREFIX = "HeartEarring";
@@ -29,17 +30,14 @@ HeartEarring::~HeartEarring()
 {
 }
 
-void HeartEarring::setup(const ConfigBase& config, const char* pConfigPrefix)
+void HeartEarring::setup(const RaftJsonIF& config)
 {
-    // Config prefix base
-    String configPrefix = String(pConfigPrefix) + "/";
-
     // Get I2C details
-    String pinName = config.getString("sdaPin", "", pConfigPrefix);
+    String pinName = config.getString("sdaPin", "");
     _sdaPin = ConfigPinMap::getPinFromName(pinName.c_str());
-    pinName = config.getString("sclPin", "", pConfigPrefix);
+    pinName = config.getString("sclPin", "");
     _sclPin = ConfigPinMap::getPinFromName(pinName.c_str());
-    _freq = config.getLong("i2cFreq", 100000, pConfigPrefix);
+    _freq = config.getLong("i2cFreq", 100000);
 
     // Check valid
     if ((_sdaPin < 0) || (_sclPin < 0))
@@ -49,7 +47,8 @@ void HeartEarring::setup(const ConfigBase& config, const char* pConfigPrefix)
     }
 
     // Setup LED heart
-    _ledHeart.setup(config, (configPrefix + "LEDHeart").c_str());
+    RaftJsonPrefixed configLEDHeart(config, "LEDHeart");
+    _ledHeart.setup(configLEDHeart);
 
     // Setup I2C
     bool i2cOk = _i2cCentral.init(0, _sdaPin, _sclPin, _freq);
@@ -59,7 +58,8 @@ void HeartEarring::setup(const ConfigBase& config, const char* pConfigPrefix)
                 i2cOk ? "OK" : "FAILED", _sdaPin, _sclPin, _freq);
 
     // Setup MAX30101
-    _max30101.setup(config, (configPrefix + "MAX30101").c_str(), &_i2cCentral);
+    RaftJsonPrefixed configMAX30101(config, "MAX30101");
+    _max30101.setup(configMAX30101, &_i2cCentral);
 
     // Set initialized
     _isInitialized = true;

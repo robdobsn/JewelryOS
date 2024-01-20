@@ -2,7 +2,7 @@
 //
 // Jewelry
 //
-// Rob Dobson 2023
+// Rob Dobson 2023-24
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,11 +17,16 @@ class APISourceInfo;
 class Jewelry : public SysModBase
 {
 public:
-    Jewelry(const char *pModuleName, ConfigBase &defaultConfig, ConfigBase *pGlobalConfig, ConfigBase *pMutableConfig);
-    ~Jewelry() override;
+    Jewelry(const char *pModuleName, RaftJsonIF& sysConfig);
+    virtual ~Jewelry();
+
+    // Create function (for use by SysManager factory)
+    static SysModBase* create(const char* pModuleName, RaftJsonIF& sysConfig)
+    {
+        return new Jewelry(pModuleName, sysConfig);
+    }
 
 protected:
-
     // Setup
     virtual void setup() override final;
 
@@ -42,7 +47,7 @@ private:
     // Power control
     PowerControl _powerControl;
 
-    // Heart earring
+    // Jewelry
     JewelryBase* _pJewelry = nullptr;
 
     // Helper functions

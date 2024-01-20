@@ -9,7 +9,7 @@
 #pragma once
 
 #include "RaftArduino.h"
-#include "ConfigBase.h"
+#include "RaftJsonIF.h"
 
 // Disable this when not debugging
 // #define DEBUG_USE_GPIO_PIN_FOR_TIMING 9
@@ -27,7 +27,7 @@ public:
     }
 
     // Setup
-    virtual void setup(const ConfigBase& config, const char* pConfigPrefix) = 0;
+    virtual void setup(const RaftJsonIF& config) = 0;
 
     // Service
     virtual void service() = 0;

@@ -9,7 +9,7 @@
 #pragma once
 
 #include <vector>
-#include <ConfigBase.h>
+#include <RaftJsonIF.h>
 #include <LEDPixels.h>
 
 class LEDGrid
@@ -20,7 +20,7 @@ public:
     ~LEDGrid();
 
     // Setup
-    void setup(const ConfigBase& config, const char* pConfigPrefix);
+    void setup(const RaftJsonIF& config);
 
     // Service
     void service();

@@ -32,11 +32,11 @@ LEDHeart::~LEDHeart()
 // Setup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LEDHeart::setup(const ConfigBase& config, const char* pConfigPrefix)
+void LEDHeart::setup(const RaftJsonIF& config)
 {
     // Get LED pins
     std::vector<String> ledPinStrs;
-    config.getArrayElems("ledPins", ledPinStrs, pConfigPrefix);
+    config.getArrayElems("ledPins", ledPinStrs);
     if (ledPinStrs.size() == 0)
     {
         LOG_I(MODULE_PREFIX, "setup no LED pins defined");
@@ -54,7 +54,7 @@ void LEDHeart::setup(const ConfigBase& config, const char* pConfigPrefix)
 
     // Get LED intensity factors
     std::vector<String> ledIntensityFactorStrs;
-    config.getArrayElems("ledIntensityFactors", ledIntensityFactorStrs, pConfigPrefix);
+    config.getArrayElems("ledIntensityFactors", ledIntensityFactorStrs);
 
     // Set intensity factors for each defined LED
     _ledIntensityFactors.resize(_ledPins.size());
@@ -72,7 +72,7 @@ void LEDHeart::setup(const ConfigBase& config, const char* pConfigPrefix)
         _animationOffAfterUs[ledIdx] = 0;
 
     // Get active level for LED pins
-    _ledActiveLevel = config.getBool("ledActiveLevel", false, pConfigPrefix);
+    _ledActiveLevel = config.getBool("ledActiveLevel", false);
 
     // Set LED pins to output and off
     for (int ledIdx = 0; ledIdx < _ledPins.size(); ledIdx++)

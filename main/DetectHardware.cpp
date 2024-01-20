@@ -12,17 +12,14 @@
 // Module
 static const char *MODULE_PREFIX = "DetectHardware";
 
-// Initial HW revision
-int DetectHardware::_hardwareRevision = -1;
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Main detection function
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int DetectHardware::detectHardware()
+void DetectHardware::detectHardware(RaftCoreApp& app)
 {
-    // Default to generic
-    _hardwareRevision = HW_IS_GENERIC_BOARD;
+    // Default to Grid Earrings V1.1.2
+    String hwRevisionStr = "grid_112";
 
     // Check analog levels on pins 3 and 4
     // GPIO 3 is LEDS_2 on Heart Earrings, Vsense on Grid Earrings V1.1 and MIC_VDD on Grid Earrings V1.1.2
@@ -38,7 +35,7 @@ int DetectHardware::detectHardware()
     // Firstly identify Grid Earrings V1.1 (pin 3 is vsense in this case and should have an ADC level > 1200)
     if (vsensePin3 > 1200)
     {
-        _hardwareRevision = HW_IS_GRID_EARRINGS_V1_1;
+        hwRevisionStr = "grid_11";
     }
     else 
     {
@@ -59,18 +56,20 @@ int DetectHardware::detectHardware()
 
             if (pin5PullDown == 0 && pin5PullUp == 1)
             {
-                _hardwareRevision = HW_IS_GRID_EARRINGS_V1_1_2;
+                hwRevisionStr = "grid_112";
             }
             else
             {
-                _hardwareRevision = HW_IS_HEART_EARRINGS;
+                hwRevisionStr = "heart";
             }
         }
     }
 
-    ESP_LOGI(MODULE_PREFIX, "detectHardware() vsensePin3 %d vsensePin4 %d returning %s (%d)", 
+    // Set the hardware revision in the system configuration
+    app.setBaseSysTypeVersion(hwRevisionStr.c_str());
+
+    // Debug
+    ESP_LOGI(MODULE_PREFIX, "detectHardware vsensePin3 %d vsensePin4 %d returning %s", 
                 (int)vsensePin3, (int)vsensePin4, 
-                getHWRevisionStr(_hardwareRevision), 
-                _hardwareRevision);
-    return _hardwareRevision;
+                hwRevisionStr.c_str());
 }

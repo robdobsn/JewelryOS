@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <SimpleMovingAverage.h>
 
-class ConfigBase;
+class RaftJsonIF;
 
 class PowerControl
 {
@@ -20,7 +20,7 @@ public:
     virtual ~PowerControl();
 
     // Setup
-    void setup(ConfigBase& config, const char* pConfigPrefix);
+    void setup(RaftJsonIF& config);
 
     // Service
     void service();

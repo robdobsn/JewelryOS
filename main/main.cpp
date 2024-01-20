@@ -3,15 +3,45 @@
 // Main entry point
 //
 // JewelOS
-// Rob Dobson 2023
+// Rob Dobson 2024
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "RaftCoreApp.h"
+#include "RegisterSysMods.h"
+#include "DetectHardware.h"
+#include "Jewelry.h"
+
+// Entry point
+extern "C" void app_main(void)
+{
+    RaftCoreApp raftCoreApp;
+
+    // Detect hardware
+    DetectHardware::detectHardware(raftCoreApp);
+
+    // Register SysMods from RaftSysMods library
+    RegisterSysMods::registerSysMods(raftCoreApp.getSysManager());
+
+    // Jewelry
+    raftCoreApp.registerSysMod("Jewelry", Jewelry::create, true);
+
+    // Loop forever
+    while (1)
+    {
+        // Yield for 1 tick
+        vTaskDelay(1);
+
+        // Service the app
+        raftCoreApp.service();
+    }
+}
+
+#ifdef USE_ORIGINAL_MAIN
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // System Name and Version
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#define SYSTEM_VERSION "1.0.0"
 
 #define MACRO_STRINGIFY(x) #x
 #define MACRO_TOSTRING(x) MACRO_STRINGIFY(x)
@@ -58,12 +88,6 @@ static const char *defaultConfigJSON =
 // Main task parameters
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-// static const int MAIN_TASK_PRIORITY = 20;
-// static const int PRO_TASK_PROCESSOR_CORE = 0;
-// static const int MAIN_TASK_PROCESSOR_CORE = 1;
-// static const int MAIN_TASK_STACK_SIZE = 16384;
-// static TaskHandle_t mainTaskHandle = nullptr;
-// extern void mainTask(void *pvParameters);
 
 // Debug
 static const char* MODULE_NAME = "MainTask";
@@ -77,7 +101,8 @@ static const char* MODULE_NAME = "MainTask";
 // #define DEBUG_SHOW_RUNTIME_STATS
 // #define DEBUG_HEAP_ALLOCATION
 // #define DEBUG_TIMING_OF_STARTUP
-// #define COLLECT_DATA_SAMPLES_WIRELESSLY
+// #define DEBUG_SHOW_NVS_INFO
+// #define DEBUG_SHOW_NVS_CONTENTS
 
 #ifdef CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
 #ifdef DEBUG_SHOW_TASK_INFO
@@ -104,6 +129,7 @@ static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in 
 
 // C, ESP32 and RTOS
 #include <stdio.h>
+#include "sdkconfig.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "esp_event.h"
@@ -111,40 +137,28 @@ static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in 
 #include "esp_heap_caps.h"
 #include "freertos/FreeRTOS.h"
 
+// Jewelry specific
+#include "Jewelry.h"
+
 // App
-#include "DetectHardware.h"
-#include "ConfigNVS.h"
-#include "SysTypeStatics.h"
 #include "SysTypeManager.h"
 #include "SysManager.h"
 
-// Jewelry
-#include "Jewelry.h"
+// Comms
+#include "CommsChannelManager.h"
+#include "ProtocolExchange.h"
+
+// File manager
+#include "FileManager.h"
 
 // BLE
 #include <BLEManager.h>
 
-// Comms
-#include <CommsChannelManager.h>
-#include <ProtocolExchange.h>
+// System type consts
+#include "SysTypeStatics.h"
 
-// File manager
-#include <FileManager.h>
-
-#ifdef COLLECT_DATA_SAMPLES_WIRELESSLY
-#include "SampleCollectorJSON.h"
-#include <SerialConsole.h>
-#include <NetworkManager.h>
-#include <WebServer.h>
-// #include <LogManager.h>
-// #include <FileSystem.h>
-// #include <ESPOTAUpdate.h>
-// #include <MQTTManager.h>
-// #include <StatePublisher.h>
-// #include <CommandSerial.h>
-// #include <CommandSocket.h>
-// #include <CommandFile.h>
-#endif
+// Hardware detection
+#include "DetectHardware.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Standard Entry Point
@@ -382,4 +396,6 @@ int runtime_stats()
     return 0;
 }
 #endif
+#endif
+
 #endif

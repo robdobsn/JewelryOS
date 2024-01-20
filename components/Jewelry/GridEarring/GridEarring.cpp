@@ -21,16 +21,14 @@ GridEarring::~GridEarring()
 {
 }
 
-void GridEarring::setup(const ConfigBase& config, const char* pConfigPrefix)
+void GridEarring::setup(const RaftJsonIF& config)
 {
-    // Config prefix base
-    String configPrefix = String(pConfigPrefix) + "/";
-
     // Setup LED grid
-    _ledGrid.setup(config, (configPrefix + "LEDGrid").c_str());
+    RaftJsonPrefixed configLEDGrid(config, "LEDGrid");
+    _ledGrid.setup(configLEDGrid);
 
     // // Setup microphone
-    // _microphone.setup(config, (configPrefix + "Microphone").c_str());
+    // _microphone.setup(config, "Microphone".c_str());
 
     // Set initialized
     _isInitialized = true;

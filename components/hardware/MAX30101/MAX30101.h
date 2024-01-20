@@ -14,7 +14,7 @@
 #include <ThreadSafeQueue.h>
 
 class RaftI2CCentralIF;
-class ConfigBase;
+class RaftJsonIF;
 class BusRequestResult;
 
 class MAX30101
@@ -24,7 +24,7 @@ public:
     virtual ~MAX30101();
 
     // Setup
-    void setup(const ConfigBase& config, const char* pConfigPrefix, RaftI2CCentralIF* pBus);
+    void setup(const RaftJsonIF& config, RaftI2CCentralIF* pBus);
 
     // Service
     void service();

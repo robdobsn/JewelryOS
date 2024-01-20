@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "PowerControl.h"
-#include "ConfigBase.h"
+#include "RaftJsonIF.h"
 #include "ConfigPinMap.h"
 #include "RaftUtils.h"
 #include "esp_sleep.h"
@@ -24,10 +24,10 @@ PowerControl::~PowerControl()
 {
 }
 
-void PowerControl::setup(ConfigBase& config, const char* pConfigPrefix)
+void PowerControl::setup(RaftJsonIF& config)
 {
     // Get power control pin
-    String pinName = config.getString("powerCtrlPin", "", pConfigPrefix);
+    String pinName = config.getString("powerCtrlPin", "");
     _powerCtrlPin = ConfigPinMap::getPinFromName(pinName.c_str());
 
     // Set power control pin to ensure power remains on
@@ -39,7 +39,7 @@ void PowerControl::setup(ConfigBase& config, const char* pConfigPrefix)
     }
 
     // Setup VSENSE pin
-    pinName = config.getString("vsensePin", "", pConfigPrefix);
+    pinName = config.getString("vsensePin", "");
     _vsensePin = ConfigPinMap::getPinFromName(pinName.c_str());
     if (_vsensePin >= 0)
     {
@@ -48,13 +48,12 @@ void PowerControl::setup(ConfigBase& config, const char* pConfigPrefix)
     }
 
     // Get ADC calibration
-    ConfigBase adcCalibration = config.getString("adcCalib", "{}", pConfigPrefix);
     _vsenseSlope = VSENSE_SLOPE_DEFAULT;
     _vsenseIntercept = VSENSE_INTERCEPT_DEFAULT;
-    double v1 = adcCalibration.getDouble("v1", 0, pConfigPrefix);
-    int a1 = adcCalibration.getLong("a1", 0, pConfigPrefix);
-    double v2 = adcCalibration.getDouble("v2", 0, pConfigPrefix);
-    int a2 = adcCalibration.getLong("a2", 0, pConfigPrefix);
+    double v1 = config.getDouble("adcCalib/v1", 0);
+    int a1 = config.getLong("adcCalib/a1", 0);
+    double v2 = config.getDouble("adcCalib/v2", 0);
+    int a2 = config.getLong("adcCalib/a2", 0);
     LOG_I(MODULE_PREFIX, "setup powerCtrlPin %d vSensePin %d v1 %.2f a1 %d v2 %.2f a2 %d", 
                 _powerCtrlPin, _vsensePin, v1, a1, v2, a2);
 
