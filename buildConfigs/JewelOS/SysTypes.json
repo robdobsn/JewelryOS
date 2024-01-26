@@ -63,6 +63,7 @@
         "logLevel": "D"
     },
     "FileManager": {
+        "enable": 1,
         "LocalFsDefault": "littlefs",
         "LocalFSFormatIfCorrupt": 1,
         "CacheFileSysInfo": 0,
@@ -92,6 +93,17 @@
         ],
         "logLevel": "D",
         "nimLogLev": "E"
+    },
+    "SamplesJSON": {
+        "enable": 1,
+        "rateLimHz": 0,
+        "maxJsonLen": 4000,
+        "jsonHdr": "{\"name\":\"hrmdata\"}",
+        "apiName": "hrmsamples",
+        "allocAtStart": true,
+        "dumpToConsole": false,
+        "dumpToFile": "samples.log",
+        "maxFileSize": 100000
     },
     "Jewelry": {
         "hardwareType##heart": "heart",

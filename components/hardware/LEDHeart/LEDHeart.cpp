@@ -157,7 +157,9 @@ void LEDHeart::handleAnimationStep()
                 int animOffTimeUs = _animationStepLevels[animStepIdx] * _ledIntensityFactors[ledIdx] * _displayBrightnessLevel;
 
                 // Set LED state
+#ifdef FEATURE_HEART_ANIMATIONS
                 digitalWrite(_ledPins[ledIdx], animOffTimeUs != 0 ? _ledActiveLevel : !_ledActiveLevel);
+#endif
                 _animationOffAfterUs[ledIdx] = animOffTimeUs;
 
                 // LOG_I(MODULE_PREFIX, "handleAnimationStep setLedOn ledIdx %d animStepIdx %d offTimeMs %d", 
@@ -194,7 +196,7 @@ uint32_t LEDHeart::getTimeToNextAnimStepUs()
     }
 
     uint32_t timeUs = _nextAnimStepAfterUs < animOffTimeUs ? _nextAnimStepAfterUs : animOffTimeUs;
-    // LOG_I(MODULE_PREFIX, "getTimeToNextAnimStepMs nextAnimStepTimeMs %d animOffTimeMs %d timeMs %d", 
-    //         _nextAnimStepAfterUs, animOffTimeMs, timeMs);
+    // LOG_I(MODULE_PREFIX, "getTimeToNextAnimStepMs nextAnimStepTimeMs %d animOffTimeUs %d timeUs %d", 
+    //         _nextAnimStepAfterUs, (int)animOffTimeUs, (int)timeUs);
     return timeUs;
 }

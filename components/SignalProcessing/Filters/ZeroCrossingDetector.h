@@ -46,4 +46,5 @@ private:
     int _lastSample = 0;
     bool _lastSampleWasPositive = false;
     bool _isFirstSample = true;
+    uint32_t _lastZeroCrossingTimeMs = 0;
 };

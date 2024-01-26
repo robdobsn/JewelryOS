@@ -19,6 +19,7 @@ static const char *MODULE_PREFIX = "MAX30101";
 #define DEBUG_HW_SETUP
 // #define DEBUG_POLL_RESULT
 // #define DEBUG_FIFO_DATA
+#define DEBUG_COLLECT_HRM_SAMPLES
 
 #define WARN_ON_HW_SETUP_FAILURE
 
@@ -169,22 +170,28 @@ void MAX30101::service()
                 _sampleQueue.put(sampleData);
             }
 
-            // Output data
-#ifdef DEBUG_FIFO_DATA
-            _lastSamplesJSON.reserve(200);
-            _lastSamplesJSON = "{\"s\":[";
+            // Debug
+#if defined(DEBUG_FIFO_DATA) || defined(DEBUG_COLLECT_HRM_SAMPLES)
+            String lastSamplesJSON;
+            lastSamplesJSON.reserve(numSamples * 10);
+            lastSamplesJSON = "{\"s\":[";
             for (uint32_t i = 0; i < numSamples; i++)
             {
                 if (i != 0)
-                    _lastSamplesJSON += ",";
-                _lastSamplesJSON += String(samples[i]);
+                    lastSamplesJSON += ",";
+                lastSamplesJSON += String(newSamples[i]);
             }
-            _lastSamplesJSON += "]}";
+            lastSamplesJSON += "]}";
+#ifdef DEBUG_COLLECT_HRM_SAMPLES
+            _debugLastSamplesJSON = lastSamplesJSON;
+#endif
+#ifdef DEBUG_FIFO_DATA
             LOG_I(MODULE_PREFIX, "service i2cAddr 0x%x sampleRate %.1f/s numSamples %d writePtr %d readPtr %d samples %s", 
                         (int)_i2cAddr, 
                         convSampleRateAndAverageToHz(_sampleRateHz, _sampleAverage),
                         (int)numSamples, (int)writePtr, (int)readPtr,
-                        _lastSamplesJSON.c_str());
+                        lastSamplesJSON.c_str());
+#endif
 #endif
         }
     }

@@ -9,7 +9,7 @@
 #include "GridEarring.h"
 #include "esp_sleep.h"
 
-static const char *MODULE_PREFIX = "GridEarring";
+// static const char *MODULE_PREFIX = "GridEarring";
 
 #define SLEEP_BETWEEN_ANIMATION_STEPS
 

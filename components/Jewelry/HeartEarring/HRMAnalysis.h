@@ -34,10 +34,13 @@ public:
     {
         // Filtering - first low pass filter then high pass filter
         double filteredSample = _lowPassFilter.process(sample);
+        _debugLPFSample = filteredSample;
         filteredSample = _highPassFilter.process(filteredSample);
+        _debugHPFSample = filteredSample;
         
         // Zero crossing detector
         bool isZeroCrossing = _zeroCrossingDetector.process(filteredSample);
+        _debugIsZeroCrossing = isZeroCrossing;
 
         // Phase locked loop
         if (isZeroCrossing)
@@ -61,6 +64,11 @@ public:
     {
         return 1000 / _phaseLockedLoop.getBeatFreqHz();
     }
+
+    // Debug values
+    double _debugLPFSample = 0;
+    double _debugHPFSample = 0;
+    bool _debugIsZeroCrossing = false;
 
 private:
     IIRFilter _lowPassFilter;

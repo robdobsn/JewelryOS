@@ -13,23 +13,24 @@
 
 static const char *MODULE_PREFIX = "HeartEarring";
 
-// The following allows disabling of animations
-#define ENABLE_ANIMATIONS
-
-// The following allows disabling sleep
-#define ENABLE_SLEEP_MODE
-
 // Debug heart rate
-// #define DEBUG_HEART_RATE
+#define DEBUG_HEART_RATE
+// #define DEBUG_HEART_RATE_SAMPLES
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Constructor
 HeartEarring::HeartEarring()
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Destructor
 HeartEarring::~HeartEarring()
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Setup
 void HeartEarring::setup(const RaftJsonIF& config)
 {
     // Get I2C details
@@ -65,6 +66,8 @@ void HeartEarring::setup(const RaftJsonIF& config)
     _isInitialized = true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Service - called frequently
 void HeartEarring::service()
 {
     // Check valid
@@ -74,50 +77,40 @@ void HeartEarring::service()
     // Service MAX30101
     _max30101.service();
 
-#ifdef ENABLE_ANIMATIONS
-    // Handle heart animation
-#ifndef ENABLE_SLEEP_MODE
-    bool heartAnimationRequired = Raft::isTimeout(millis(), _lastHeartPulseTimeMs, 
-                _hrmAnalysis.getHeartRatePulseIntervalMs());
-    if (heartAnimationRequired)
-#endif
+    // Check step time
+    uint64_t timeNowUs = micros();
+    if (!Raft::isTimeout(timeNowUs, _timeOfLastStepUs, _timeToNextAnimationStepUs))
+        return;
+    _timeOfLastStepUs = timeNowUs;
+
+    // Check state
+    if (_isPulseStart)
     {
         // Start pulse animation
         _ledHeart.startPulseAnimation();
-        _lastHeartPulseTimeMs = millis();
-        while (true)
+        _lastHeartPulseTimeUs = timeNowUs;
+        _isPulseStart = false;
+    }
+    else
+    {
+        // Service heart LEDs
+        _ledHeart.service();
+
+        // Get time to next animation step
+        // UINT32_MAX means that animation has finished
+        _timeToNextAnimationStepUs = _ledHeart.getTimeToNextAnimStepUs();
+        if (_timeToNextAnimationStepUs == UINT32_MAX)
         {
-            // Service heart LEDs
-            _ledHeart.service();
-
-            // Get time to next animation step
-            // UINT32_MAX means that animation has finished
-            uint32_t timeToNextAnimStepUs = _ledHeart.getTimeToNextAnimStepUs();
-            if (timeToNextAnimStepUs == UINT32_MAX)
-                break;
-
-#ifdef ENABLE_SLEEP_MODE
-            // Sleep for time to next animation step
-            esp_sleep_enable_timer_wakeup(timeToNextAnimStepUs);
-            esp_light_sleep_start();
-#else // ENABLE_SLEEP_MODE
-            // Delay for time to next animation step
-#ifdef DEBUG_USE_GPIO_PIN_FOR_TIMING
-            digitalWrite(DEBUG_USE_GPIO_PIN_FOR_TIMING, HIGH);
-#endif
-            delayMicroseconds(timeToNextAnimStepUs);
-#ifdef DEBUG_USE_GPIO_PIN_FOR_TIMING
-            digitalWrite(DEBUG_USE_GPIO_PIN_FOR_TIMING, LOW);
-#endif
-#endif // ENABLE_SLEEP_MODE
+            _isPulseStart = true;
+            _timeOfLastStepUs = _lastHeartPulseTimeUs;
+            _timeToNextAnimationStepUs = _timeBetweenHeartPulsesUs;
         }
     }
-#endif
 
     // Check if wakeup on HRM FIFO full is enabled
     if (_max30101.isWakeupOnFifoFullEnabled())
     {
-#ifdef ENABLE_SLEEP_MODE
+#ifdef FEATURE_ENABLE_SLEEP_MODE
         // Set wakeup timer to worst case time
         esp_sleep_enable_timer_wakeup(_hrmAnalysis.getTimeToNextPeakMs(millis()) * 1000);
 
@@ -127,16 +120,23 @@ void HeartEarring::service()
 #endif
     }
 
-    // Handle new HRM data
-    uint16_t hrmValue = 0;
+    // Handle new sensor data
+    uint16_t sensorValue = 0;
     uint32_t sampleTimeMs = 0;
-    while(_max30101.getSample(hrmValue, sampleTimeMs))
+    while(_max30101.getSample(sensorValue, sampleTimeMs))
     {
-        // Debug
-        // LOG_I(MODULE_PREFIX, "service hrmValue %d timeMs %d", hrmValue, sampleTimeMs);
-
         // Process HRM value
-        _hrmAnalysis.process(hrmValue, sampleTimeMs);
+        _hrmAnalysis.process(sensorValue, sampleTimeMs);
+
+#ifdef DEBUG_HEART_RATE_SAMPLES
+        // Debug
+        LOG_I(MODULE_PREFIX, "service ms %d red %d lpf %.3f hpf %.3f z %d",
+                sampleTimeMs, 
+                sensorValue,
+                _hrmAnalysis._debugLPFSample,
+                _hrmAnalysis._debugHPFSample,
+                _hrmAnalysis._debugIsZeroCrossing);
+#endif
     }
 
     // Debug
@@ -153,6 +153,8 @@ void HeartEarring::service()
 #endif
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Shutdown
 void HeartEarring::shutdown()
 {
     // Check valid

@@ -38,13 +38,16 @@ public:
     }
 
 private:
-
-    // Debug
-    uint32_t _lastDebugTimeMs = 0;
-    
     // Time between heart pulses
-    uint32_t _timeBetweenHeartPulsesMs = 1000;
-    uint32_t _lastHeartPulseTimeMs = 0;
+    uint32_t _timeBetweenHeartPulsesUs = 1000000;
+    uint64_t _lastHeartPulseTimeUs = 0;
+
+    // Animation timing
+    uint32_t _timeToNextAnimationStepUs = 0;
+    uint64_t _timeOfLastStepUs = 0;
+
+    // Animation mode
+    bool _isPulseStart = true;
 
     // MAX30101
     MAX30101 _max30101;
@@ -60,4 +63,7 @@ private:
 
     // HRM analysis
     HRMAnalysis _hrmAnalysis;
+
+    // Debug
+    uint32_t _lastDebugTimeMs = 0;
 };

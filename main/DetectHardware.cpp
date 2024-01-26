@@ -18,6 +18,10 @@ static const char *MODULE_PREFIX = "DetectHardware";
 
 void DetectHardware::detectHardware(RaftCoreApp& app)
 {
+    // Prepare pins
+    pinMode(3, INPUT_PULLDOWN);
+    delay(100);
+
     // Default to Grid Earrings V1.1.2
     String hwRevisionStr = "grid_112";
 
@@ -64,6 +68,9 @@ void DetectHardware::detectHardware(RaftCoreApp& app)
             }
         }
     }
+
+    // Pin release
+    pinMode(3, INPUT);
 
     // Set the hardware revision in the system configuration
     app.setBaseSysTypeVersion(hwRevisionStr.c_str());

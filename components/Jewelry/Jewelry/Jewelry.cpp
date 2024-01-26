@@ -16,10 +16,6 @@
 
 static const char *MODULE_PREFIX = "Jewelry";
 
-// Comment the following line to stop the power control function keeping the board alive
-// and turning off the board on low battery
-#define ENABLE_POWER_CONTROL
-
 // Debug
 // #define DEBUG_MAIN_LOOP
 
@@ -45,29 +41,31 @@ void Jewelry::setup()
     // Call base class
     SysModBase::setup();
 
-#ifdef ENABLE_POWER_CONTROL
+#ifdef FEATURE_POWER_CONTROL_KEEP_ALIVE
     // Setup power control
     RaftJsonPrefixed powerControlConfig(configGetConfig(), "PowerControl");
     _powerControl.setup(powerControlConfig);
 #endif
 
-    // TODO - PUT BACK
+    // Check hardware type
+    String hwTypeStr = configGetString("hardwareType", "");
 
-    // // Check hardware type
-    // String hwTypeStr = configGetString("hardwareType", "");
-    // if (hwTypeStr == "heart")
-    // {
-    //     // Setup heart earring
-    //     _pJewelry = new HeartEarring();
-    //     _pJewelry->setup(configGetConfig(), "HeartEarring");
-    // }
-    // else if (hwTypeStr == "grid")
-    // {
+    LOG_I(MODULE_PREFIX, "setup hardwareType %s config %s", hwTypeStr.c_str(), modConfig().getJsonDoc());
+
+    if (hwTypeStr == "heart")
+    {
+        // Setup heart earring
+        _pJewelry = new HeartEarring();
+        RaftJsonPrefixed heartConfig(modConfig(), "HeartEarring");
+        _pJewelry->setup(heartConfig);
+    }
+    else if (hwTypeStr == "grid")
+    {
         // Setup grid earring
         _pJewelry = new GridEarring();
         RaftJsonPrefixed gridConfig(modConfig(), "GridEarring");
         _pJewelry->setup(gridConfig);
-    // }
+    }
 
     // Debug
 #ifdef DEBUG_USE_GPIO_PIN_FOR_TIMING
@@ -92,11 +90,11 @@ void Jewelry::service()
         String samplesJSON = _pJewelry->getLastSamplesJSON();
         if (samplesJSON.length() > 0)
         {
-            sysModSendCmdJSON("HRMSamples", samplesJSON.c_str());
+            sysModSendCmdJSON("SamplesJSON", samplesJSON.c_str());
         }
     }
 
-#ifdef ENABLE_POWER_CONTROL
+#ifdef FEATURE_POWER_CONTROL_KEEP_ALIVE
     // Service power control
     _powerControl.service();
 

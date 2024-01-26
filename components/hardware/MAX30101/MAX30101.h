@@ -17,6 +17,8 @@ class RaftI2CCentralIF;
 class RaftJsonIF;
 class BusRequestResult;
 
+// #define DEBUG_COLLECT_HRM_SAMPLES
+
 class MAX30101
 {
 public:

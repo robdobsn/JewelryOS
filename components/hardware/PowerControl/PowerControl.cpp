@@ -14,8 +14,6 @@
 
 static const char *MODULE_PREFIX = "PowerControl";
 
-#define ENABLE_SHUTDOWN_DUE_TO_BATTERY_LOW
-
 PowerControl::PowerControl()
 {
 }
@@ -158,7 +156,7 @@ void PowerControl::service()
         {
             // Debug
             LOG_I(MODULE_PREFIX, "Battery low %s voltage %.2fV instADC %d avgADC %d battLowThreshold %.2fV", 
-#ifdef ENABLE_SHUTDOWN_DUE_TO_BATTERY_LOW
+#ifdef FEATURE_SHUTDOWN_DUE_TO_BATTERY_LOW
                     "shutting down",
 #else
                     "!!! SHUTDOWN DISABLED !!!",
@@ -167,7 +165,7 @@ void PowerControl::service()
             delay(200);
 
             // Shutdown initiated
-#ifdef ENABLE_SHUTDOWN_DUE_TO_BATTERY_LOW
+#ifdef FEATURE_SHUTDOWN_DUE_TO_BATTERY_LOW
             _shutdownInitiated = true;
 #endif
         }
