@@ -30,7 +30,7 @@
         },
         {
             "name": "Generate font using python",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/components/hardware/LEDGrid/GenerateFont.py",
             "args": [
@@ -40,11 +40,11 @@
         },
         {
             "name": "Test generate JSON from SysTypes.json using python",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/scripts/json2header.py",
             "args": [
-                "${workspaceFolder}/buildConfigs/JewelOS/SysTypes.json",
+                "${workspaceFolder}/systypes/JewelOS/SysTypes.json",
                 "${workspaceFolder}/TESTOUTPUT_SysTypes.json"
             ],
         }
