@@ -2,12 +2,36 @@
 <html>
 <head>
     <title>Heart Rate Monitor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        textarea {
+            width: 80%;
+            height: 300px;
+            margin: 20px auto;
+            display: block;
+            font-size: 16px;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+            overflow: auto;
+        }
+    </style>
 </head>
 <body>
     <h1>Heart Rate Monitor Data Collection</h1>
     <button id="connect">Connect to HRM</button>
     <button id="save">Save Data</button>
-    <textarea id="data" rows="20" cols="50"></textarea>
+    <button id="copy">Copy Data</button>
+    <textarea id="data" readonly></textarea>
 
     <script>
         let heartRateData = [];
@@ -43,7 +67,9 @@
             const timestamp = new Date().toISOString();
             heartRateData.push({ timestamp, heartRate });
 
-            document.getElementById('data').value += `${timestamp},${heartRate}\n`;
+            const dataTextArea = document.getElementById('data');
+            dataTextArea.value += `${timestamp},${heartRate}\n`;
+            dataTextArea.scrollTop = dataTextArea.scrollHeight; // Scroll to the bottom
             console.log(`Heart Rate: ${heartRate}`);
         }
 
@@ -56,6 +82,13 @@
             a.download = 'heart_rate_data.txt';
             a.click();
             URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('copy').addEventListener('click', () => {
+            const dataTextArea = document.getElementById('data');
+            dataTextArea.select();
+            document.execCommand('copy');
+            alert('Data copied to clipboard');
         });
     </script>
 </body>
