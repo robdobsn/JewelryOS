@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Heart Rate Monitor</title>
+</head>
+<body>
+    <h1>Heart Rate Monitor Data Collection</h1>
+    <button id="connect">Connect to HRM</button>
+    <button id="save">Save Data</button>
+    <textarea id="data" rows="20" cols="50"></textarea>
+
+    <script>
+        let heartRateData = [];
+
+        document.getElementById('connect').addEventListener('click', async () => {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['heart_rate'] }],
+                    optionalServices: ['battery_service'] // Add optional services if needed
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService('heart_rate');
+                const characteristic = await service.getCharacteristic('heart_rate_measurement');
+                
+                if (characteristic.properties.notify) {
+                    await characteristic.startNotifications();
+                    characteristic.addEventListener('characteristicvaluechanged', handleHeartRateMeasurement);
+                    console.log('Notifications started and event listener attached');
+                } else {
+                    console.error('The characteristic does not support notifications');
+                }
+
+                console.log('Connected to HRM');
+            } catch (error) {
+                console.error('Failed to connect to HRM:', error);
+            }
+        });
+
+        function handleHeartRateMeasurement(event) {
+            const value = event.target.value;
+            const flags = value.getUint8(0);
+            const heartRate = flags & 0x01 ? value.getUint16(1, true) : value.getUint8(1);
+            const timestamp = new Date().toISOString();
+            heartRateData.push({ timestamp, heartRate });
+
+            document.getElementById('data').value += `${timestamp},${heartRate}\n`;
+            console.log(`Heart Rate: ${heartRate}`);
+        }
+
+        document.getElementById('save').addEventListener('click', () => {
+            const dataStr = heartRateData.map(entry => `${entry.timestamp},${entry.heartRate}`).join('\n');
+            const blob = new Blob([dataStr], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'heart_rate_data.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
