@@ -109,7 +109,7 @@ void MAX30101::setup(const RaftJsonIF& config, RaftI2CCentralIF* pI2C)
 // Service
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MAX30101::service()
+void MAX30101::loop()
 {
     // Check if valid
     if (_pI2C == nullptr)
@@ -186,7 +186,7 @@ void MAX30101::service()
             _debugLastSamplesJSON = lastSamplesJSON;
 #endif
 #ifdef DEBUG_FIFO_DATA
-            LOG_I(MODULE_PREFIX, "service i2cAddr 0x%x sampleRate %.1f/s numSamples %d writePtr %d readPtr %d samples %s", 
+            LOG_I(MODULE_PREFIX, "loop i2cAddr 0x%x sampleRate %.1f/s numSamples %d writePtr %d readPtr %d samples %s", 
                         (int)_i2cAddr, 
                         convSampleRateAndAverageToHz(_sampleRateHz, _sampleAverage),
                         (int)numSamples, (int)writePtr, (int)readPtr,

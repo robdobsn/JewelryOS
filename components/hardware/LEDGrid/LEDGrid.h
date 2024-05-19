@@ -22,8 +22,8 @@ public:
     // Setup
     void setup(const RaftJsonIF& config);
 
-    // Service
-    void service();
+    // Loop
+    void loop();
 
     // Shutdown
     void shutdown();

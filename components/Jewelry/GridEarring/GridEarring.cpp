@@ -34,17 +34,17 @@ void GridEarring::setup(const RaftJsonIF& config)
     _isInitialized = true;
 }
 
-void GridEarring::service()
+void GridEarring::loop()
 {
     // Check initialized
     if (!_isInitialized)
         return;
 
-    // Service
-    _ledGrid.service();
+    // Loop
+    _ledGrid.loop();
 
     // // Microphone
-    // _microphone.service();
+    // _microphone.loop();
 
     // Get time to next animation step
     // UINT32_MAX means that animation has finished

@@ -40,8 +40,8 @@ public:
         RaftJson params(pParamsJson);
     }
 
-    // Service
-    void service() override final
+    // Loop
+    void loop() override final
     {
         // Check update time
         if (!Raft::isTimeout(millis(), _lastLoopMs, _refreshRateMs * _rateMultiple))

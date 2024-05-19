@@ -21,8 +21,8 @@ add_compile_definitions(SYSTEM_VERSION="2.0.0")
 
 # Raft components
 set(RAFT_COMPONENTS
-    RaftSysMods@ReWorkConfigBase
-    RaftI2C@ReWorkConfigBase
+    RaftSysMods@main
+    RaftI2C@main
 )
 
 # File system

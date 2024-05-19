@@ -67,15 +67,15 @@ void HeartEarring::setup(const RaftJsonIF& config)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// @brief Service - called frequently
-void HeartEarring::service()
+/// @brief Loop - called frequently
+void HeartEarring::loop()
 {
     // Check valid
     if (!_isInitialized)
         return;
 
     // Service MAX30101
-    _max30101.service();
+    _max30101.loop();
 
     // Check step time
     uint64_t timeNowUs = micros();
@@ -94,7 +94,7 @@ void HeartEarring::service()
     else
     {
         // Service heart LEDs
-        _ledHeart.service();
+        _ledHeart.loop();
 
         // Get time to next animation step
         // UINT32_MAX means that animation has finished
@@ -130,7 +130,7 @@ void HeartEarring::service()
 
 #ifdef DEBUG_HEART_RATE_SAMPLES
         // Debug
-        LOG_I(MODULE_PREFIX, "service ms %d red %d lpf %.3f hpf %.3f z %d",
+        LOG_I(MODULE_PREFIX, "loop ms %d red %d lpf %.3f hpf %.3f z %d",
                 sampleTimeMs, 
                 sensorValue,
                 _hrmAnalysis._debugLPFSample,
@@ -143,7 +143,7 @@ void HeartEarring::service()
 #ifdef DEBUG_HEART_RATE
     if (Raft::isTimeout(millis(), _lastDebugTimeMs, 1000))
     {
-        LOG_I(MODULE_PREFIX, "service HR %.3fHz (%.3f BPM) timeToNextPeakMs %d interval %dms",
+        LOG_I(MODULE_PREFIX, "loop HR %.3fHz (%.3f BPM) timeToNextPeakMs %d interval %dms",
                     _hrmAnalysis.getHeartRateHz(),
                     _hrmAnalysis.getHeartRateHz() * 60,
                     (int)_hrmAnalysis.getTimeToNextPeakMs(millis()),

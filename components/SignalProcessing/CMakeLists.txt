@@ -3,5 +3,5 @@ idf_component_register(
                 INCLUDE_DIRS
                   "Filters"
                 REQUIRES
-                  raftcore-src
+                  RaftCore
                 )

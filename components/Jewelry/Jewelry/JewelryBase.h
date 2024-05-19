@@ -29,8 +29,8 @@ public:
     // Setup
     virtual void setup(const RaftJsonIF& config) = 0;
 
-    // Service
-    virtual void service() = 0;
+    // Loop
+    virtual void loop() = 0;
 
     // Shutdown
     virtual void shutdown() = 0;
