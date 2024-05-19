@@ -2,7 +2,7 @@
 set(IDF_TARGET "esp32c3")
 
 # System version
-add_compile_definitions(SYSTEM_VERSION="2.0.0")
+add_compile_definitions(SYSTEM_VERSION="2.0.1")
 
 # Enable sleeping between animations
 # add_compile_definitions(FEATURE_ENABLE_SLEEP_MODE)
