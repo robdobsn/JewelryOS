@@ -7,11 +7,20 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 20px;
+            background-color: #121212;
+            color: #ffffff;
         }
         button {
             margin: 10px;
             padding: 10px 20px;
             font-size: 16px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #333333;
         }
         textarea {
             width: 80%;
@@ -23,6 +32,9 @@
             box-sizing: border-box;
             resize: none;
             overflow: auto;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #333333;
         }
     </style>
 </head>
@@ -31,10 +43,13 @@
     <button id="connect">Connect to HRM</button>
     <button id="save">Save Data</button>
     <button id="copy">Copy Data</button>
+    <button id="waypoint">Add Waypoint</button>
     <textarea id="data" readonly></textarea>
 
     <script>
         let heartRateData = [];
+        let waypointCount = 0;
+        let waypointPending = false;
 
         document.getElementById('connect').addEventListener('click', async () => {
             try {
@@ -65,16 +80,17 @@
             const flags = value.getUint8(0);
             const heartRate = flags & 0x01 ? value.getUint16(1, true) : value.getUint8(1);
             const timestamp = new Date().toISOString();
-            heartRateData.push({ timestamp, heartRate });
+            heartRateData.push({ timestamp, heartRate, waypoint: waypointPending ? `Waypoint ${waypointCount}` : ''});
 
             const dataTextArea = document.getElementById('data');
-            dataTextArea.value += `${timestamp},${heartRate}\n`;
+            dataTextArea.value += `${timestamp},${heartRate},${waypointPending ? "Waypoint" + waypointCount : ''}\n`;
             dataTextArea.scrollTop = dataTextArea.scrollHeight; // Scroll to the bottom
             console.log(`Heart Rate: ${heartRate}`);
+            waypointPending = false;
         }
 
         document.getElementById('save').addEventListener('click', () => {
-            const dataStr = heartRateData.map(entry => `${entry.timestamp},${entry.heartRate}`).join('\n');
+            const dataStr = heartRateData.map(entry => `${entry.timestamp},${entry.heartRate},${entry.waypoint}`).join('\n');
             const blob = new Blob([dataStr], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -90,6 +106,20 @@
             document.execCommand('copy');
             alert('Data copied to clipboard');
         });
+
+        document.getElementById('waypoint').addEventListener('click', addWaypoint);
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                event.preventDefault(); // Prevent default spacebar behavior
+                addWaypoint();
+            }
+        });
+
+        function addWaypoint() {
+            waypointCount += 1;
+            const dataTextArea = document.getElementById('data');
+            waypointPending = true;
+        }
     </script>
 </body>
 </html>

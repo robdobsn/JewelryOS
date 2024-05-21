@@ -13,13 +13,13 @@
 
 // #define DEBUG_IIR_FILTER_UPTO_POINT 100
 
-class IIRFilter
+class IIRFilter2ndOrder
 {
 public:
     // Constructor
     // a0 + a1*z^-1 + a2*z^-2 = b0 + b1*z^-1 + b2*z^-2
     // zi0 and zi1 are the initial conditions
-    IIRFilter(double a0, double a1, double a2, double b0, double b1, double b2, double zi0, double zi1)
+    IIRFilter2ndOrder(double a0, double a1, double a2, double b0, double b1, double b2, double zi0, double zi1)
     {
         a[0] = a0;
         a[1] = a1;
@@ -30,7 +30,7 @@ public:
         zi[0] = zi0;
         zi[1] = zi1;
     }
-    ~IIRFilter()
+    ~IIRFilter2ndOrder()
     {
     }
     double process(double x1) {

@@ -5,7 +5,56 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
+            "name": "Test Filter Make",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/evaluations/TestPythonVsCppFilters/TestFilter4thOrder",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/evaluations/TestPythonVsCppFilters",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "makeTestFilter4thOrder",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "TestFiltersDirect",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/evaluations/TestPythonVsCppFilters/TestFilter4thOrder",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/evaluations/TestPythonVsCppFilters",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "HRMAnalysisCPP",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/evaluations/HRMAnalysisCPP/HRMAnalysisCPP",

@@ -19,12 +19,12 @@ std::vector<std::string> split(const std::string &str, char delimiter)
 
 typedef struct HRMAnalogValues
 {
-    std::vector<double> timestamps;
-    std::vector<double> red_led_adc_values;
-    std::vector<double> ir_led_adc_values;
+    std::vector<int> timestamps;
+    std::vector<int> red_led_adc_values;
+    std::vector<int> ir_led_adc_values;
 } HRMAnalogValues;
 
-HRMAnalogValues readHRMAnalogValues(std::string logfile)
+HRMAnalogValues readHRMAnalogValues(std::string logfile, bool relative_time = false)
 {
     // Format of header and data line is:
     // Time (s),Red,IR
@@ -49,8 +49,8 @@ HRMAnalogValues readHRMAnalogValues(std::string logfile)
 
         // Extract the values
         int line_time_ms = std::stof(words[0]) * 1000;
-        double red_led_adc_value = std::stof(words[1]);
-        double ir_led_adc_value = std::stof(words[2]);
+        int red_led_adc_value = std::stoi(words[1]);
+        int ir_led_adc_value = std::stoi(words[2]);
 
         // Check for first sample time
         if (first_sample_line_time_ms == 0)
@@ -58,7 +58,7 @@ HRMAnalogValues readHRMAnalogValues(std::string logfile)
             first_sample_line_time_ms = line_time_ms;
         }
 
-        hrm_data_read.timestamps.push_back(line_time_ms - first_sample_line_time_ms);
+        hrm_data_read.timestamps.push_back(relative_time ? line_time_ms - first_sample_line_time_ms : line_time_ms);
         hrm_data_read.red_led_adc_values.push_back(red_led_adc_value);
         hrm_data_read.ir_led_adc_values.push_back(ir_led_adc_value);
     }

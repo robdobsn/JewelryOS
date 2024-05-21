@@ -8,23 +8,21 @@
 
 #pragma once
 
-#include "IIRFilter.h"
+#include "IIRFilter4thOrder.h"
 #include "ZeroCrossingDetector.h"
 #include "PhaseLockedLoop.h"
+#include <vector>
 
 class HRMAnalysis
 {
 public:
-    HRMAnalysis() :
-        // Coefficients generated using scipy butter filter b, a = signal.butter(2, 1.25, fs=50, btype='low')
-        // Initial conditions zi0, zi1 = signal.lfilter_zi(b, a)
-        _lowPassFilter(1, -1.7786317778245846, 0.8008026466657073, 0.005542717210280682, 0.011085434420561363, 0.005542717210280682, 0.9944572827897219, -0.7952599294554288),
-        // Coefficients generated using scipy butter filter signal.butter(2, 0.75, fs=50, btype='high')
-        // Initial conditions zi0, zi1 = signal.lfilter_zi(b, a)
-        _highPassFilter(1, -1.86689228, 0.87521455, 0.93552671, -1.87105341, 0.93552671, -0.93552671, 0.93552671),
+    HRMAnalysis(float freqBandLowerHz = 0.75, float freqBandUpperHz = 3.0, float freqCentreHz = 1.0) :
+        // Bandpass filter
+        _butterBandpassFilter(_butterCoeff4A, _butterCoeff4B, _butterZi),
+
         // Phase locked loop
         // Parameters set highest and lowest expected heart rate in Hz and max PID output (+/-)
-        _phaseLockedLoop(3.5, 0.5, 10)
+        _phaseLockedLoop(freqBandLowerHz, freqBandUpperHz, freqCentreHz, maxPIDOutput, pK_PID, pI_PID, pD_PID)
     {
     }
     ~HRMAnalysis()
@@ -32,11 +30,9 @@ public:
     }
     void process(double sample, uint32_t sampleTimeMs)
     {
-        // Filtering - first low pass filter then high pass filter
-        double filteredSample = _lowPassFilter.process(sample);
-        _debugLPFSample = filteredSample;
-        filteredSample = _highPassFilter.process(filteredSample);
-        _debugHPFSample = filteredSample;
+        // Filtering
+        double filteredSample = _butterBandpassFilter.process(sample);
+        _debugFilteredSample = filteredSample;
         
         // Zero crossing detector
         bool isZeroCrossing = _zeroCrossingDetector.process(filteredSample);
@@ -66,13 +62,23 @@ public:
     }
 
     // Debug values
-    double _debugLPFSample = 0;
-    double _debugHPFSample = 0;
+    double _debugFilteredSample = 0;
     bool _debugIsZeroCrossing = false;
 
 private:
-    IIRFilter _lowPassFilter;
-    IIRFilter _highPassFilter;
+    // static constexpr double _butterCoeff8A[] = {1.0, -6.05960751, 16.45391545, -26.18801509, 26.74607739, -17.95499326, 7.73746173, -1.9574456, 0.22281157};
+    // static constexpr double _butterCoeff8B[] = {0.00336282, 0.0, -0.01345126, 0.0, 0.02017689, 0.0, -0.01345126, 0.0, 0.00336282};
+    // // static constexpr double _butterZi[] = {-0.00336282, -0.00336282, 0.01008845, 0.01008845, -0.01008845, -0.01008845, 0.00336282, 0.00336282};
+    // static constexpr double _butter8Zi[] = {0,0,0,0,0,0,0,0};
+    static constexpr double _butterCoeff4A[] = {1.0, -2.99198635, 3.52764744, -1.97218019, 0.45044543};
+    static constexpr double _butterCoeff4B[] = {0.05644846, 0.0, -0.11289692, 0.0, 0.05644846};
+    static constexpr double _butterZi[] = {-0.05644846, -0.05644846, 0.05644846, 0.05644846};
+    static constexpr float maxPIDOutput = 1.0;
+    static constexpr float pK_PID = 1;
+    static constexpr float pI_PID = 0.001;
+    static constexpr float pD_PID = 0.4;
+
+    IIRFilter4thOrder _butterBandpassFilter;
     ZeroCrossingDetector _zeroCrossingDetector;
     PhaseLockedLoop _phaseLockedLoop;
 };

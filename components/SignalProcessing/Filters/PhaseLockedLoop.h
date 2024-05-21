@@ -17,11 +17,14 @@
 class PhaseLockedLoop
 {
 public:
-    PhaseLockedLoop(float maxFreqHz, float minFreqHz, float maxPIDOutput) :
-        _frequencyPID(0.5, 0.03, 0.2, maxPIDOutput, -maxPIDOutput)
+    PhaseLockedLoop(float minFreqHz, float maxFreqHz, float centreFreqHz,
+                float maxPIDOutput, 
+                float kP, float kI, float kD) :
+        _frequencyPID(kP, kI, kD, maxPIDOutput, -maxPIDOutput)
     {
         _maxFreqHz = maxFreqHz;
         _minFreqHz = minFreqHz;
+        _centreFreqHz = centreFreqHz;
     }
     ~PhaseLockedLoop()
     {
@@ -52,13 +55,16 @@ public:
 
         // Check in valid range
         if ((measuredFreqHz < _minFreqHz) || (measuredFreqHz > _maxFreqHz))
-            return;
+            measuredFreqHz = _centreFreqHz;
 
         // Update PID
+#ifdef DEBUG_PLL
+        float prevFreq = _beatFreqHz;
+#endif
         _beatFreqHz -= _frequencyPID.process(_beatFreqHz, measuredFreqHz, intervalMs) * 0.1;
 
 #ifdef DEBUG_PLL
-        printf(" beatFreq %f\n", _beatFreqHz);
+        printf(" prev beatFreq %f beatFreq %f\n", prevFreq, _beatFreqHz);
 #endif
     }
 
@@ -90,4 +96,5 @@ private:
     PIDControl _frequencyPID;
     float _maxFreqHz = 3.5;
     float _minFreqHz = 0.5;
+    float _centreFreqHz = 1;
 };

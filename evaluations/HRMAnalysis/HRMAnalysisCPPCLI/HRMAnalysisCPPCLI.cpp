@@ -38,12 +38,16 @@ int main(int argc, char **argv)
     std::vector<double> libCalcHeartRateHz;
     std::vector<int> libCalcTimeToNextPeakMs;
     std::vector<int> libCalcHeartRatePulseIntervalMs;
+    std::vector<double> lib_filtered_RedLedAdcValues;
+    std::vector<bool> lib_IsZeroCrossing;
     for (int i = 0; i < hrmDataRead.red_led_adc_values.size(); ++i)
     {
         hrmAnalysis.process(hrmDataRead.red_led_adc_values[i], hrmDataRead.timestamps[i]);
         libCalcHeartRateHz.push_back(hrmAnalysis.getHeartRateHz());
         libCalcTimeToNextPeakMs.push_back(hrmAnalysis.getTimeToNextPeakMs(hrmDataRead.timestamps[i]));
         libCalcHeartRatePulseIntervalMs.push_back(hrmAnalysis.getHeartRatePulseIntervalMs());
+        lib_filtered_RedLedAdcValues.push_back(hrmAnalysis._debugFilteredSample);
+        lib_IsZeroCrossing.push_back(hrmAnalysis._debugIsZeroCrossing);
     }
 
     // Write the data out to a file
@@ -51,7 +55,7 @@ int main(int argc, char **argv)
     outfile.open(outData);
 
     // Write the header
-    outfile << "Time (ms),Estimated HR (Hz),Estimated HR (bpm),Time to next peak (ms),Heart rate pulse interval (ms),Red LED ADC,IR LED ADC" << std::endl;
+    outfile << "Time (ms),Estimated HR (Hz),Estimated HR (bpm),Time to next peak (ms),Heart rate pulse interval (ms),Red LED ADC,IR LED ADC,Filtered,ZeroCross" << std::endl;
     int estimatedHRIdx = 0;
     for (int i = 0; i < hrmDataRead.timestamps.size(); ++i)
     {
@@ -62,6 +66,8 @@ int main(int argc, char **argv)
                 "," << libCalcHeartRatePulseIntervalMs[i] <<
                 "," << hrmDataRead.red_led_adc_values[i] <<
                 "," << hrmDataRead.ir_led_adc_values[i] <<
+                "," << lib_filtered_RedLedAdcValues[i] <<
+                "," << lib_IsZeroCrossing[i] <<
                 std::endl;
     }
     outfile.close();

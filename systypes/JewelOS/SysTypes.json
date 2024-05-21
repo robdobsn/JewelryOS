@@ -122,8 +122,8 @@
             "MAX30101": {
                 "i2cAddr": 87,
                 "redLedIntensity": "0x1f",
-                "sampleAverage": 8,
-                "sampleRateHz": 400,
+                "sampleAverage": 4,
+                "sampleRateHz": 100,
                 "pulseWidthUs": 411,
                 "adcRange": 4096,
                 "fifoAlmostFullThreshold": 31,
