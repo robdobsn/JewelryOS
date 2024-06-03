@@ -16,9 +16,6 @@ add_compile_definitions(SYSTEM_VERSION="2.0.0")
 # Enable heart LED animations
 # add_compile_definitions(FEATURE_HEART_ANIMATIONS)
 
-# Disabled main features
-# add_compile_definitions(ETHERNET_HARDWARE_OLIMEX)
-
 # Raft components
 set(RAFT_COMPONENTS
     RaftSysMods@ReWorkConfigBase
