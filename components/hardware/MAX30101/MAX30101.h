@@ -28,8 +28,8 @@ public:
     // Setup
     void setup(const RaftJsonIF& config, RaftI2CCentralIF* pBus);
 
-    // Service
-    void service();
+    // Loop
+    void loop();
 
     // Get pulse rate
     float getPulseRate();

@@ -100,10 +100,10 @@ void LEDHeart::setup(const RaftJsonIF& config)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Service
+// Loop
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LEDHeart::service()
+void LEDHeart::loop()
 {
     // Turn off any LEDs that need to be turned off
     for (int ledIdx = 0; ledIdx < _ledPins.size(); ledIdx++)
@@ -114,7 +114,7 @@ void LEDHeart::service()
             {
                 digitalWrite(_ledPins[ledIdx], !_ledActiveLevel);
                 _animationOffAfterUs[ledIdx] = 0;
-                // LOG_I(MODULE_PREFIX, "service setLedOff ledIdx %d", ledIdx);
+                // LOG_I(MODULE_PREFIX, "loop setLedOff ledIdx %d", ledIdx);
             }
         }
     }

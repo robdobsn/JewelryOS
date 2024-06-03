@@ -21,8 +21,8 @@ public:
     // Setup
     void setup(const RaftJsonIF& config);
 
-    // Service
-    void service();
+    // Loop
+    void loop();
 
     // Get time to next animation step
     uint32_t getTimeToNextAnimStepUs();

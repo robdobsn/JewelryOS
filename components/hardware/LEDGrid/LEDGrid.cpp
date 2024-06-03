@@ -104,16 +104,16 @@ void LEDGrid::setup(const RaftJsonIF& config)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Service
+// Loop
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LEDGrid::service()
+void LEDGrid::loop()
 {
 #ifdef ANIMATION_IN_THIS_CLASS
     // Check if time for next step in sequence
     if (Raft::isTimeout(micros(), _lastAnimTimeUs, _nextAnimStepAfterUs))
     {
-        // LOG_I(MODULE_PREFIX, "service animStep %d animColourIdx %d", _animationStepNum, _animationColourIdx);
+        // LOG_I(MODULE_PREFIX, "loop animStep %d animColourIdx %d", _animationStepNum, _animationColourIdx);
         // Handle animation step
         handleAnimationStep();
 
@@ -134,7 +134,7 @@ void LEDGrid::service()
         _lastAnimTimeUs = micros();
     }
 #else
-    _ledPixels.service();
+    _ledPixels.loop();
 #endif
 }
 

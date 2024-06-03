@@ -33,7 +33,7 @@ extern "C" void app_main(void)
         vTaskDelay(1);
 
         // Service the app
-        raftCoreApp.service();
+        raftCoreApp.loop();
     }
 }
 
@@ -331,7 +331,7 @@ extern "C" void app_main(void)
         // taskYIELD();
 
         // Service all the system modules
-        _sysManager.service();
+        _sysManager.loop();
 
         // Test and Monitoring
 #ifdef DEBUG_SHOW_TASK_INFO

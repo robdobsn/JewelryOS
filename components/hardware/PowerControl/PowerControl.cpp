@@ -79,7 +79,7 @@ void PowerControl::setup(RaftJsonIF& config)
 
 }
 
-void PowerControl::service()
+void PowerControl::loop()
 {
     // Update VSENSE average
     if (_vsensePin >= 0)

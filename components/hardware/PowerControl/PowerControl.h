@@ -23,7 +23,7 @@ public:
     void setup(RaftJsonIF& config);
 
     // Service
-    void service();
+    void loop();
 
     // Get voltage
     float getVoltageFromADCReading(uint32_t adcReading);

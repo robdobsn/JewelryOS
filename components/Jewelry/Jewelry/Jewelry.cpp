@@ -24,7 +24,7 @@ static const char *MODULE_PREFIX = "Jewelry";
 ///////////////////////////////////////////////////////////////////////////////
 
 Jewelry::Jewelry(const char *pModuleName, RaftJsonIF& sysConfig) :
-    SysModBase(pModuleName, sysConfig)
+    RaftSysMod(pModuleName, sysConfig)
 {
 }
 
@@ -39,7 +39,7 @@ Jewelry::~Jewelry()
 void Jewelry::setup()
 {
     // Call base class
-    SysModBase::setup();
+    RaftSysMod::setup();
 
 #ifdef FEATURE_POWER_CONTROL_KEEP_ALIVE
     // Setup power control
@@ -75,16 +75,16 @@ void Jewelry::setup()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Service
+// Loop
 ///////////////////////////////////////////////////////////////////////////////
 
-void Jewelry::service()
+void Jewelry::loop()
 {
     // Check jewelry valid
     if (_pJewelry)
     {
         // Service jewelry
-        _pJewelry->service();
+        _pJewelry->loop();
 
         // Update data collection if enabled
         String samplesJSON = _pJewelry->getLastSamplesJSON();
@@ -96,13 +96,13 @@ void Jewelry::service()
 
 #ifdef FEATURE_POWER_CONTROL_KEEP_ALIVE
     // Service power control
-    _powerControl.service();
+    _powerControl.loop();
 
     // Check for shutdown
     if (_powerControl.isShutdownRequested())
     {
         // Debug
-        LOG_I(MODULE_PREFIX, "service shutdown requested");
+        LOG_I(MODULE_PREFIX, "loop shutdown requested");
         delay(100);
 
         // Shutdown
@@ -119,7 +119,7 @@ void Jewelry::service()
     if (Raft::isTimeout(millis(), _lastDebugTimeMs, 1000))
     {
         // Debug
-        LOG_I(MODULE_PREFIX, "service cpu freq %d", esp_clk_cpu_freq());
+        LOG_I(MODULE_PREFIX, "loop cpu freq %d", esp_clk_cpu_freq());
         _lastDebugTimeMs = millis();
     }
 
@@ -175,7 +175,7 @@ RaftRetCode Jewelry::apiControl(const String &reqStr, String &respStr, const API
 // Get JSON status
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-String Jewelry::getStatusJSON()
+String Jewelry::getStatusJSON() const
 {
     return "{}";
 }

@@ -32,8 +32,8 @@ public:
     {
     }
 
-    // Service
-    virtual void service() override final
+    // Loop
+    virtual void loop() override final
     {
         // Check update time
         if (!Raft::isTimeout(millis(), _lastLoopMs, _refreshRateMs))

@@ -8,8 +8,8 @@ idf_component_register(
                   "HeartEarring"
                   "GridEarring"
                 REQUIRES
-                  raftcore-src
-                  rafti2c-src
+                  RaftCore
+                  RaftI2C
                   hardware
                   SignalProcessing
                 )

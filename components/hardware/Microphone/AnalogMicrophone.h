@@ -28,8 +28,8 @@
 //     void setup(ConfigBase& config, const char* pConfigPrefix);
 //     void teardown();
 
-//     // Service
-//     void service();
+//     // Loop
+//     void loop();
 
 //     // Capture
 //     bool captureToFile(const char* filename, uint32_t recTimeSecs);
