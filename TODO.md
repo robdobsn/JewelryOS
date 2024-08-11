@@ -11,3 +11,4 @@
 [] transfer log data over BLE
 [] fix problem with LED strip transaction complete check - seems it doesn't work as on grid earrings when going to sleep after waiting for completion the pixels can get corrupted - maybe just not calling the function at all ? - there is a delay currenting inserted to solve this - look for TODO
 [] fix any other TODOs
+[] main processor clock rate is not set low

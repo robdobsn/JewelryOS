@@ -12,6 +12,9 @@
 #include "RaftUtils.h"
 #include "esp_sleep.h"
 
+// #define DEBUG_USER_BUTTON_PRESS
+// #define DEBUG_POWER_CONTROL
+
 static const char *MODULE_PREFIX = "PowerControl";
 
 PowerControl::PowerControl()
@@ -45,6 +48,15 @@ void PowerControl::setup(RaftJsonIF& config)
         pinMode(_vsensePin, INPUT);
     }
 
+    // Get battery low voltage
+    _batteryLowV = config.getDouble("batteryLowV", BATTERY_LOW_V_DEFAULT);
+
+    // Get VSENSE button level
+    _vsenseButtonLevel = config.getLong("vsenseButtonLevel", VSENSE_BUTTON_LEVEL_DEFAULT);
+
+    // Get button off time
+    _buttonOffTimeMs = config.getLong("buttonOffTimeMs", 2000);
+
     // Get ADC calibration
     _vsenseSlope = VSENSE_SLOPE_DEFAULT;
     _vsenseIntercept = VSENSE_INTERCEPT_DEFAULT;
@@ -66,10 +78,11 @@ void PowerControl::setup(RaftJsonIF& config)
     if (_vsensePin > 0)
     {
         uint32_t adcReading = _vsensePin > 0 ? analogRead(_vsensePin) : 0;
-        LOG_I(MODULE_PREFIX, "setup powerCtrlPin %d vSensePin %d currentADC %d currentVoltage %.2fV vsenseSlope %.5f vsenseIntercept %.2f", 
+        LOG_I(MODULE_PREFIX, "setup powerCtrlPin %d vSensePin %d currentADC %d currentVoltage %.2fV vsenseSlope %.5f vsenseIntercept %.2f batteryLowV %.2f vSenseButtonLevel %d buttonOffTime %dms", 
                     _powerCtrlPin, _vsensePin, (int)adcReading, 
                     getVoltageFromADCReading(adcReading), 
-                    _vsenseSlope, _vsenseIntercept);
+                    _vsenseSlope, _vsenseIntercept,
+                    _batteryLowV, _vsenseButtonLevel, _buttonOffTimeMs);
     }
     else
     {
@@ -82,92 +95,109 @@ void PowerControl::setup(RaftJsonIF& config)
 void PowerControl::loop()
 {
     // Update VSENSE average
-    if (_vsensePin >= 0)
+    if (_vsensePin < 0)
+        return;
+
+    // Get VSENSE value
+    uint32_t vsenseVal = analogRead(_vsensePin);
+
+    // The pushbutton is wired to VSENSE so if it is pressed the VSENSE pin
+    // will go above a threshold
+    if (vsenseVal > _vsenseButtonLevel)
     {
-        // Get VSENSE value
-        uint32_t vsenseVal = analogRead(_vsensePin);
+        // Note time press started
+        if (!_buttonPressed)
+            _buttonPressDownTimeMs = millis();
 
-        // The pushbutton is wired to VSENSE so if it is pressed the VSENSE pin
-        // will go above a threshold
-        if (vsenseVal > VSENSE_BUTTON_PRESSED_THRESHOLD)
+        // Pressed
+        _buttonPressed = true;
+        _buttonPressChangeTimeMs = millis();
+
+        // Check if button press is over the off time threshold
+        if (Raft::timeElapsed(millis(), _buttonPressDownTimeMs) > _buttonOffTimeMs)
         {
-            // Note time press started
-            if (!_buttonPressed)
-                _buttonPressDownTimeMs = millis();
-
-            // Pressed
-            _buttonPressed = true;
-            _buttonPressChangeTimeMs = millis();
-
-            // Check if button press is over the off time threshold
-            if (Raft::timeElapsed(millis(), _buttonPressDownTimeMs) > BUTTON_OFF_TIME_THRESHOLD_MS)
+            // Debug
+#ifdef DEBUG_USER_BUTTON_PRESS
+            if (Raft::isTimeout(millis(), _lastWarnUserShutdownTimeMs, 1000))
             {
-                // Debug
-                LOG_I(MODULE_PREFIX, "Button pressed for %dms - shutting down",
-                        (int)Raft::timeElapsed(millis(), _buttonPressDownTimeMs));
-                delay(200);
+                LOG_I(MODULE_PREFIX, "loop button pressed for %dms (vsense %d buttonLevel %d buttonOffTime %dms)",
+                    (int)Raft::timeElapsed(millis(), _buttonPressDownTimeMs), vsenseVal, _vsenseButtonLevel, _buttonOffTimeMs);
+                _lastWarnUserShutdownTimeMs = millis();
+            }
+#endif // DEBUG_USER_BUTTON_PRESS
 
-                // Shutdown initiated
-                _shutdownInitiated = true;
+            // Shutdown initiated
+#ifdef FEATURE_POWER_CONTROL_USER_SHUTDOWN
+            _shutdownInitiated = true;
+#endif // FEATURE_POWER_CONTROL_USER_SHUTDOWN
+        }
+    }
+    else
+    {
+        // Not pressed - debounce
+        if (_buttonPressed)
+        {
+            if (Raft::isTimeout(millis(), _buttonPressChangeTimeMs, 200))
+            {
+                // Button pressed
+#ifdef DEBUG_USER_BUTTON_PRESS
+                LOG_I(MODULE_PREFIX, "loop button pressed for %dms and released (button off time %dms)",
+                        (int)Raft::timeElapsed(millis(), _buttonPressDownTimeMs), _buttonOffTimeMs);
+#endif // DEBUG_USER_BUTTON_PRESS
+                _buttonPressed = false;
             }
         }
         else
         {
-            // Not pressed - debounce
-            if (_buttonPressed)
-            {
-                if (Raft::isTimeout(millis(), _buttonPressChangeTimeMs, 200))
-                {
-                    // Button pressed
-                    LOG_I(MODULE_PREFIX, "Button pressed for %dms and released",
-                            (int)Raft::timeElapsed(millis(), _buttonPressDownTimeMs));
-                    _buttonPressed = false;
-                }
-            }
-            else
-            {
-                // Average vsense values that are not button presses
-                _vsenseAvg.sample(vsenseVal);
-                _sampleCount++;
-            }
+            // Average vsense values that are not button presses
+            _vsenseAvg.sample(vsenseVal);
+            _sampleCount++;
         }
     }
 
     // Debug
+#ifdef DEBUG_POWER_CONTROL
     if (Raft::isTimeout(millis(), _lastDebugTimeMs, 1000))
     {
-        LOG_I(MODULE_PREFIX, "service %d avg %d voltage %.2fV battLowThreshold %.2fV sampleCount %d",
+        LOG_I(MODULE_PREFIX, "loop vSense %d avgVSense %d Vcalculated %.2fV battLowThreshold %.2fV sampleCount %d buttonLevel %d",
                     analogRead(_vsensePin), 
                     _vsenseAvg.getAverage(),
                     getVoltageFromADCReading(_vsenseAvg.getAverage()),
-                    BATTERY_LOW_THRESHOLD,
-                    _sampleCount);
+                    _batteryLowV,
+                    _sampleCount,
+                    _vsenseButtonLevel);
         _lastDebugTimeMs = millis();
     }
+#endif // DEBUG_POWER_CONTROL
 
     // Check for shutdown due to battery low
-    if (!_shutdownInitiated && (_vsensePin >= 0) && (_sampleCount > 100))
+    if (!_shutdownInitiated && (_sampleCount > 100))
     {
         // Get voltage
         float voltage = getVoltageFromADCReading(_vsenseAvg.getAverage());
 
         // Check for shutdown
-        if (voltage < BATTERY_LOW_THRESHOLD)
+        if (voltage < _batteryLowV)
         {
             // Debug
-            LOG_I(MODULE_PREFIX, "Battery low %s voltage %.2fV instADC %d avgADC %d battLowThreshold %.2fV", 
-#ifdef FEATURE_SHUTDOWN_DUE_TO_BATTERY_LOW
-                    "shutting down",
+#ifdef DEBUG_POWER_CONTROL
+            if (Raft::isTimeout(millis(), _lastWarnBatLowShutdownTimeMs, 1000))
+            {
+                LOG_I(MODULE_PREFIX, "Battery low %s voltage %.2fV instADC %d avgADC %d battLowThreshold %.2fV", 
+#ifdef FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN
+                        "shutting down",
 #else
-                    "!!! SHUTDOWN DISABLED !!!",
-#endif
-                    voltage, analogRead(_vsensePin), _vsenseAvg.getAverage(), BATTERY_LOW_THRESHOLD);
-            delay(200);
+                        "!!! SHUTDOWN DISABLED !!!",
+#endif // FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN
+                    voltage, analogRead(_vsensePin), _vsenseAvg.getAverage(), _batteryLowV);
+                _lastWarnBatLowShutdownTimeMs = millis();
+            }
+#endif // DEBUG_POWER_CONTROL
 
             // Shutdown initiated
-#ifdef FEATURE_SHUTDOWN_DUE_TO_BATTERY_LOW
+#ifdef FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN
             _shutdownInitiated = true;
-#endif
+#endif // FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN
         }
     }
 }

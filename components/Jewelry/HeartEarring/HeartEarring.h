@@ -39,11 +39,9 @@ public:
 
 private:
     // Time between heart pulses
-    uint32_t _timeBetweenHeartPulsesUs = 1000000;
-    uint64_t _lastHeartPulseTimeUs = 0;
+    uint32_t _timeToNextPulseAnimStartUs = 1000000;
 
     // Animation timing
-    uint32_t _timeToNextAnimationStepUs = 0;
     uint64_t _timeOfLastStepUs = 0;
 
     // Animation mode

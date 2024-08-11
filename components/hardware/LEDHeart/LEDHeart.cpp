@@ -10,6 +10,7 @@
 #include "Logger.h"
 #include "RaftUtils.h"
 #include "ConfigPinMap.h"
+#include "driver/gpio.h"
 
 static const char* MODULE_PREFIX = "LEDHeart";
 
@@ -34,6 +35,9 @@ LEDHeart::~LEDHeart()
 
 void LEDHeart::setup(const RaftJsonIF& config)
 {
+    // Get time between animation steps
+    _animStepTimeUs = config.getInt("animStepTimeUs", ANIM_STEP_TIME_US_DEFAULT);
+
     // Get LED pins
     std::vector<String> ledPinStrs;
     config.getArrayElems("ledPins", ledPinStrs);
@@ -112,7 +116,9 @@ void LEDHeart::loop()
         {
             if (Raft::isTimeout(micros(), _lastAnimTimeUs, _animationOffAfterUs[ledIdx]))
             {
+                gpio_hold_dis((gpio_num_t)_ledPins[ledIdx]);
                 digitalWrite(_ledPins[ledIdx], !_ledActiveLevel);
+                gpio_hold_en((gpio_num_t)_ledPins[ledIdx]);
                 _animationOffAfterUs[ledIdx] = 0;
                 // LOG_I(MODULE_PREFIX, "loop setLedOff ledIdx %d", ledIdx);
             }
@@ -158,7 +164,9 @@ void LEDHeart::handleAnimationStep()
 
                 // Set LED state
 #ifdef FEATURE_HEART_ANIMATIONS
+                gpio_hold_dis((gpio_num_t)_ledPins[ledIdx]);
                 digitalWrite(_ledPins[ledIdx], animOffTimeUs != 0 ? _ledActiveLevel : !_ledActiveLevel);
+                gpio_hold_en((gpio_num_t)_ledPins[ledIdx]);
 #endif
                 _animationOffAfterUs[ledIdx] = animOffTimeUs;
 
@@ -173,8 +181,8 @@ void LEDHeart::handleAnimationStep()
     for (int ledIdx = 0; ledIdx < _ledPins.size(); ledIdx++)
     {
         digitalWrite(_ledPins[ledIdx], !_ledActiveLevel);
+        // gpio_hold_en((gpio_num_t)_ledPins[ledIdx]);
     }
-
 #endif
 }
 

@@ -40,7 +40,8 @@ public:
 private:
 
     // VSENSE threshold when button is pressed
-    static const uint32_t VSENSE_BUTTON_PRESSED_THRESHOLD = 2300;
+    static const uint32_t VSENSE_BUTTON_LEVEL_DEFAULT = 2300;
+    uint32_t _vsenseButtonLevel = VSENSE_BUTTON_LEVEL_DEFAULT;
 
     // VSENSE to voltage conversion for Heart Earrings
     // Note that this is overridden by values in the sysTypes if present
@@ -59,7 +60,8 @@ private:
     double _vsenseIntercept = VSENSE_INTERCEPT_DEFAULT;
 
     // Shutdown due to battery low threshold
-    static constexpr float BATTERY_LOW_THRESHOLD = 3.55;
+    static constexpr float BATTERY_LOW_V_DEFAULT = 3.55;
+    float _batteryLowV = BATTERY_LOW_V_DEFAULT;
 
     // Shutdown initiated
     bool _shutdownInitiated = false;
@@ -83,8 +85,11 @@ private:
     uint32_t _buttonPressDownTimeMs = 0;
 
     // Off time threshold for button press ms
-    static constexpr uint32_t BUTTON_OFF_TIME_THRESHOLD_MS = 2000;
+    static constexpr uint32_t BUTTON_OFF_TIME_MS_DEFAULT = 2000;
+    uint32_t _buttonOffTimeMs = BUTTON_OFF_TIME_MS_DEFAULT;
 
     // Debug
     uint32_t _lastDebugTimeMs = 0;
+    uint32_t _lastWarnBatLowShutdownTimeMs = 0;
+    uint32_t _lastWarnUserShutdownTimeMs = 0;
 };

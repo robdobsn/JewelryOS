@@ -111,10 +111,6 @@ void MAX30101::setup(const RaftJsonIF& config, RaftI2CCentralIF* pI2C)
 
 void MAX30101::loop()
 {
-    // Check if valid
-    if (_pI2C == nullptr)
-        return;
-
     // Handle initialisation
     if (!_isInitialised)
     {
@@ -204,7 +200,7 @@ void MAX30101::loop()
 void MAX30101::initHardware()
 {
     // Check if ready for init attempt
-    if (!Raft::isTimeout(millis(), _lastInitAttemptTimeMs, 1000))
+    if ((!_pI2C) || (!Raft::isTimeout(millis(), _lastInitAttemptTimeMs, 1000)))
         return;
     _lastInitAttemptTimeMs = millis();
 

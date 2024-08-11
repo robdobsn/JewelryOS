@@ -30,7 +30,7 @@ public:
     // Start pulse animation
     void startPulseAnimation()
     {
-        _nextAnimStepAfterUs = 50000;
+        _nextAnimStepAfterUs = _animStepTimeUs;
         _animationStepNum = 0;
     }
 
@@ -49,8 +49,12 @@ private:
     // Timer for animation
     uint64_t _lastAnimTimeUs = 0;
 
+    // Animation step timing
+    static const uint32_t ANIM_STEP_TIME_US_DEFAULT = 25000;
+    uint32_t _animStepTimeUs = ANIM_STEP_TIME_US_DEFAULT;
+
     // Next animation step time
-    uint32_t _nextAnimStepAfterUs = 50000;
+    uint32_t _nextAnimStepAfterUs = ANIM_STEP_TIME_US_DEFAULT;
 
     // Animation step number
     uint32_t _animationStepNum = 0;

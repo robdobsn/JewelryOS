@@ -7,9 +7,6 @@ add_compile_definitions(SYSTEM_VERSION="2.0.1")
 # Enable sleeping between animations
 # add_compile_definitions(FEATURE_ENABLE_SLEEP_MODE)
 
-# Enable shutdown due to battery low
-# add_compile_definitions(FEATURE_SHUTDOWN_DUE_TO_BATTERY_LOW)
-
 # Enable power control function keeping the board alive
 # add_compile_definitions(FEATURE_POWER_CONTROL_KEEP_ALIVE)
 

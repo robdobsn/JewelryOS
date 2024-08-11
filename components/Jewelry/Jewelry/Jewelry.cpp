@@ -41,7 +41,7 @@ void Jewelry::setup()
     // Call base class
     RaftSysMod::setup();
 
-#ifdef FEATURE_POWER_CONTROL_KEEP_ALIVE
+#ifdef FEATURE_POWER_CONTROL_SETUP
     // Setup power control
     RaftJsonPrefixed powerControlConfig(configGetConfig(), "PowerControl");
     _powerControl.setup(powerControlConfig);
@@ -94,8 +94,7 @@ void Jewelry::loop()
         }
     }
 
-#ifdef FEATURE_POWER_CONTROL_KEEP_ALIVE
-    // Service power control
+    // Power control loop
     _powerControl.loop();
 
     // Check for shutdown
@@ -112,7 +111,6 @@ void Jewelry::loop()
         // Shutdown
         _powerControl.shutdown();
     }
-#endif
 
 #ifdef DEBUG_MAIN_LOOP
 
