@@ -12,15 +12,19 @@
             "StatsCB"
         ],
         "slowSysModMs": 100,
-        "pauseWiFiforBLE":1
+        "pauseWiFiforBLE":1,
+        "supervisorEnable": 1,
+        "loopAllSysMods": 1
     },
     "ProtExchg": {
+        "enable": 0,
         "RICSerial":{
             "FrameBound":"0xE7",
             "CtrlEscape":"0xD7"
         }
     },
     "NetMan": {
+        "enable": 0,
         "wifiSTAEn": 0,
         "wifiAPEn": 0,
         "ethEn": 0,

@@ -26,6 +26,12 @@ public:
     // Service
     virtual void loop() override final;
 
+    // Sleep currently handled within the loop function
+    virtual uint32_t getSleepDurationUs()
+    {
+        return 0;
+    }
+
     // Shutdown
     virtual void shutdown() override final;
 

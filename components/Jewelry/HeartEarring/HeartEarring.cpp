@@ -115,20 +115,20 @@ void HeartEarring::loop()
 
     // Check animation step
     uint64_t timeNowUs = micros();
-    uint64_t timeToSleepUs = 0;
+    _nextSleepDurationUs = 0;
 
     // Check state
     if (_isPulseStart)
     {
-        timeToSleepUs = Raft::timeToTimeout(timeNowUs, _timeOfLastStepUs, _timeToNextPulseAnimStartUs);
-        if (timeToSleepUs == 0)
+        _nextSleepDurationUs = Raft::timeToTimeout(timeNowUs, _timeOfLastStepUs, _timeToNextPulseAnimStartUs);
+        if (_nextSleepDurationUs == 0)
         {
             // Start pulse animation
             _timeOfLastStepUs = timeNowUs;
             _ledHeart.startPulseAnimation();
             _isPulseStart = false;
             uint64_t nextStepUs = _ledHeart.getTimeToNextAnimStepUs();
-            timeToSleepUs = (nextStepUs == UINT32_MAX) ? 0 : Raft::timeToTimeout(timeNowUs, _timeOfLastStepUs, nextStepUs);
+            _nextSleepDurationUs = (nextStepUs == UINT32_MAX) ? 0 : Raft::timeToTimeout(timeNowUs, _timeOfLastStepUs, nextStepUs);
         }
     }
     else
@@ -141,12 +141,12 @@ void HeartEarring::loop()
             _isPulseStart = true;
             _timeOfLastStepUs = timeNowUs;                
             _timeToNextPulseAnimStartUs = _hrmAnalysis.getTimeToNextPeakMs(millis()) * 1000;
-            timeToSleepUs = _timeToNextPulseAnimStartUs;
+            _nextSleepDurationUs = _timeToNextPulseAnimStartUs;
         }
         else
         {
-            timeToSleepUs = Raft::timeToTimeout(timeNowUs, _timeOfLastStepUs, nextStepUs);
-            if (timeToSleepUs == 0)
+            _nextSleepDurationUs = Raft::timeToTimeout(timeNowUs, _timeOfLastStepUs, nextStepUs);
+            if (_nextSleepDurationUs == 0)
             {
                 // Handle animation step
                 _ledHeart.loop();
@@ -154,22 +154,6 @@ void HeartEarring::loop()
             }
         }
     }
-
-#ifdef FEATURE_ENABLE_SLEEP_MODE
-    // Set wakeup timer to worst case time
-    esp_sleep_enable_timer_wakeup(timeToSleepUs);
-
-    // If enabled, set to wakeup on GPIO pins (already setup in MAX30101 hardware init)
-#ifdef FEATURE_MAX30101_SENSOR    
-    if (_max30101.isWakeupOnFifoFullEnabled())
-    {
-        esp_sleep_enable_gpio_wakeup();
-    }
-#endif
-
-    // Enter light sleep
-    esp_light_sleep_start();
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

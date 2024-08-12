@@ -44,7 +44,7 @@ public:
     void shutdown();
 
     // Check if wakeup on FIFO full enabled
-    bool isWakeupOnFifoFullEnabled()
+    bool wakeupOnGPIO()
     {
         return _wakeupOnFifoFull;
     }
@@ -62,8 +62,14 @@ public:
         return isValid;
     }
 
+    // Get num debug samples available
+    uint32_t debugAreSamplesAvailable()
+    {
+        return _debugLastSamplesJSON.length() > 0;
+    }
+
     // Get last samples JSON
-    String getLastSamplesJSON()
+    String debugGetLastSamplesJSON()
     {
         String tmpStr = _debugLastSamplesJSON;
         _debugLastSamplesJSON = "";
@@ -281,6 +287,9 @@ private:
 
     // I2C Bus
     RaftI2CCentralIF* _pI2C = nullptr;
+
+    // Flags to control logging of HRM samples
+    bool _collectHRM = false;
 
     // Queue of sample data
     class SampleData

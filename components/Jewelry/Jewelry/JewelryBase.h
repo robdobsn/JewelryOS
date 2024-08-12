@@ -32,11 +32,29 @@ public:
     // Loop
     virtual void loop() = 0;
 
+    // Get sleep duration in us
+    virtual uint32_t getSleepDurationUs()
+    {
+        return 0;
+    }
+
     // Shutdown
     virtual void shutdown() = 0;
 
-    // Get last samples JSON
-    virtual String getLastSamplesJSON()
+    // Check if we should wakeup on GPIO
+    bool wakeupOnGPIO()
+    {
+        return false;
+    }
+
+    // Debug check if samples available
+    virtual bool debugAreSamplesAvailable()
+    {
+        return false;
+    }
+
+    // Debug get last samples JSON
+    virtual String debugGetLastSamplesJSON()
     {
         return "";
     }

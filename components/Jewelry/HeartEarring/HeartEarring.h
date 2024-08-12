@@ -28,13 +28,31 @@ public:
     // Loop
     virtual void loop() override final;
 
+    // Get sleep duration in us
+    virtual uint32_t getSleepDurationUs() override final
+    {
+        return _nextSleepDurationUs;
+    }
+
     // Shutdown
     virtual void shutdown() override final;
 
-    // Get last samples JSON
-    virtual String getLastSamplesJSON() override final
+    // Check if we should wakeup on GPIO
+    bool wakeupOnGPIO()
     {
-        return _max30101.getLastSamplesJSON();
+        return _max30101.wakeupOnGPIO();
+    }
+
+    // Debug check if samples available
+    virtual bool debugAreSamplesAvailable() override final
+    {
+        return _max30101.debugAreSamplesAvailable();
+    }
+
+    // Debug get last samples JSON
+    virtual String debugGetLastSamplesJSON() override final
+    {
+        return _max30101.debugGetLastSamplesJSON();
     }
 
 private:
@@ -43,6 +61,10 @@ private:
 
     // Animation timing
     uint64_t _timeOfLastStepUs = 0;
+
+    // Sleep duration in us - this is continually updated (in the loop function) to account 
+    // for the time to the next pulse animation step
+    uint32_t _nextSleepDurationUs = 0;
 
     // Animation mode
     bool _isPulseStart = true;

@@ -19,7 +19,6 @@ static const char *MODULE_PREFIX = "MAX30101";
 #define DEBUG_HW_SETUP
 // #define DEBUG_POLL_RESULT
 // #define DEBUG_FIFO_DATA
-#define DEBUG_COLLECT_HRM_SAMPLES
 
 #define WARN_ON_HW_SETUP_FAILURE
 
@@ -82,12 +81,15 @@ void MAX30101::setup(const RaftJsonIF& config, RaftI2CCentralIF* pI2C)
     // Wakeup on FIFO full
     _wakeupOnFifoFull = config.getBool("wakeupOnFifoFull", true);
 
+    // Collect HRM samples
+    _collectHRM = config.getBool("collectHRM", false);
+
     // Calculate interval between samples
     _sampleIntervalMs = (uint32_t) (1000 / (1.0 * _sampleRateHz / _sampleAverage));
 
     // Log
 #ifdef DEBUG_HW_SETUP
-    LOG_I(MODULE_PREFIX, "setup i2cAddr 0x%02x redLedIntensity %0.1fmA(0x%02x) sampleAverage %d sampleRate %dHz sampleIntervalMs %dms pulseWidth %duS fifoAlmostFullThreshold %d adcRange %d FIFOfullPin %d wakeupOnFifoFull %s",
+    LOG_I(MODULE_PREFIX, "setup i2cAddr 0x%02x redLedIntensity %0.1fmA(0x%02x) sampleAverage %d sampleRate %dHz sampleIntervalMs %dms pulseWidth %duS fifoAlmostFullThreshold %d adcRange %d FIFOfullPin %d wakeupOnFifoFull %s collectHRM %s",
                 (int)_i2cAddr,
                 convRedLedIntensityToMA(_redLedIntensity),
                 (int)_redLedIntensity,
@@ -98,7 +100,8 @@ void MAX30101::setup(const RaftJsonIF& config, RaftI2CCentralIF* pI2C)
                 (int)_fifoAlmostFullThreshold,
                 (int)_adcRange,
                 (int)_fifoFullPin,
-                _wakeupOnFifoFull ? "YES" : "NO");
+                _wakeupOnFifoFull ? "YES" : "NO",
+                _collectHRM ? "YES" : "NO");
 #endif
 
     // Set initialisation time
@@ -167,28 +170,37 @@ void MAX30101::loop()
             }
 
             // Debug
-#if defined(DEBUG_FIFO_DATA) || defined(DEBUG_COLLECT_HRM_SAMPLES)
-            String lastSamplesJSON;
-            lastSamplesJSON.reserve(numSamples * 10);
-            lastSamplesJSON = "{\"s\":[";
-            for (uint32_t i = 0; i < numSamples; i++)
+            if (_collectHRM)
             {
-                if (i != 0)
-                    lastSamplesJSON += ",";
-                lastSamplesJSON += String(newSamples[i]);
-            }
-            lastSamplesJSON += "]}";
-#ifdef DEBUG_COLLECT_HRM_SAMPLES
-            _debugLastSamplesJSON = lastSamplesJSON;
-#endif
+                String lastSamplesJSON;
+                lastSamplesJSON.reserve(numSamples * 10);
+                lastSamplesJSON = "{\"s\":[";
+                for (uint32_t i = 0; i < numSamples; i++)
+                {
+                    if (i != 0)
+                        lastSamplesJSON += ",";
+                    lastSamplesJSON += String(newSamples[i]);
+                }
+                lastSamplesJSON += "]}";
+                _debugLastSamplesJSON = lastSamplesJSON;
+            
 #ifdef DEBUG_FIFO_DATA
-            LOG_I(MODULE_PREFIX, "loop i2cAddr 0x%x sampleRate %.1f/s numSamples %d writePtr %d readPtr %d samples %s", 
-                        (int)_i2cAddr, 
-                        convSampleRateAndAverageToHz(_sampleRateHz, _sampleAverage),
-                        (int)numSamples, (int)writePtr, (int)readPtr,
-                        lastSamplesJSON.c_str());
+                LOG_I(MODULE_PREFIX, "loop i2cAddr 0x%x sampleRate %.1f/s numSamples %d writePtr %d readPtr %d samples %s", 
+                            (int)_i2cAddr, 
+                            convSampleRateAndAverageToHz(_sampleRateHz, _sampleAverage),
+                            (int)numSamples, (int)writePtr, (int)readPtr,
+                            lastSamplesJSON.c_str());
 #endif
+            }
+            else
+            {
+#ifdef DEBUG_FIFO_DATA
+                LOG_I(MODULE_PREFIX, "loop i2cAddr 0x%x sampleRate %.1f/s numSamples %d writePtr %d readPtr %d", 
+                            (int)_i2cAddr, 
+                            convSampleRateAndAverageToHz(_sampleRateHz, _sampleAverage),
+                            (int)numSamples, (int)writePtr, (int)readPtr);
 #endif
+            }
         }
     }
 }

@@ -13,6 +13,7 @@
 #include "GridEarring.h"
 #include <RestAPIEndpointManager.h>
 #include "esp_private/esp_clk.h"
+#include "esp_sleep.h"
 
 static const char *MODULE_PREFIX = "Jewelry";
 
@@ -86,11 +87,36 @@ void Jewelry::loop()
         // Service jewelry
         _pJewelry->loop();
 
-        // Update data collection if enabled
-        String samplesJSON = _pJewelry->getLastSamplesJSON();
-        if (samplesJSON.length() > 0)
+#ifdef FEATURE_ENABLE_SLEEP_MODE
+        // Get sleep duration
+        uint32_t timeToSleepUs = _pJewelry->getSleepDurationUs();
+        if (timeToSleepUs != 0)
         {
-            sysModSendCmdJSON("SamplesJSON", samplesJSON.c_str());
+
+            // Set wakeup timer to worst case time
+            esp_sleep_enable_timer_wakeup(timeToSleepUs);
+
+            // If enabled, set to wakeup on GPIO pins (already setup in MAX30101 hardware init)
+#ifdef FEATURE_MAX30101_SENSOR    
+            if (_pJewelry->wakeupOnGPIO())
+            {
+                esp_sleep_enable_gpio_wakeup();
+            }
+#endif
+
+            // Enter light sleep
+            esp_light_sleep_start();
+        }
+#endif
+
+        // Update data collection if enabled
+        if (_pJewelry->debugAreSamplesAvailable())
+        {
+            String samplesJSON = _pJewelry->debugGetLastSamplesJSON();
+            if (samplesJSON.length() > 0)
+            {
+                sysModSendCmdJSON("SamplesJSON", samplesJSON.c_str());
+            }
         }
     }
 
