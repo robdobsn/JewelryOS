@@ -36,8 +36,8 @@ public:
 
 private:
 
-    // Brightness level
-    uint32_t _displayBrightnessLevel = 100;
+    // Brightness level % (0-100)
+    uint32_t _displayBrightnessPC = 100;
 
     // LED pins and intensity factors
     std::vector<int> _ledPins;
@@ -77,4 +77,7 @@ private:
 
     // Helpers
     void handleAnimationStep();
+
+    // Debug
+    static constexpr const char* MODULE_PREFIX = "LEDHeart";
 };

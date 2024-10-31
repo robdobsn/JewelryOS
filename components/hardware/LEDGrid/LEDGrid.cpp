@@ -14,8 +14,6 @@
 #include "LEDPatternScrollMsg.h"
 #include "driver/gpio.h"
 
-static const char* MODULE_PREFIX = "LEDGrid";
-
 #define HOLD_PIXEL_PINS_DURING_SLEEP
 
 #define DEBUG_LED_GRID_SETUP
@@ -41,6 +39,8 @@ LEDGrid::~LEDGrid()
 
 void LEDGrid::setup(const RaftJsonIF& config)
 {
+#ifdef FEATURE_OLD_LED_GRID
+
     // Get the pixel power control pin
     String pixelPowerPin = config.getString("pixelPowerPin", "");
     _pixelPowerPin = ConfigPinMap::getPinFromName(pixelPowerPin.c_str());
@@ -90,6 +90,7 @@ void LEDGrid::setup(const RaftJsonIF& config)
         _ledPixels.setPixelMappingFn(std::bind(&LEDGrid::mapPixelIdxToLEDIdx, this, std::placeholders::_1));
     }
 
+
     // Add patterns to LED pixels
     _ledPixels.addPattern("RainbowSnake", &LEDPatternRainbowSnake::build);
     _ledPixels.addPattern("ScrollMsg", &LEDPatternScrollMsg::build);
@@ -101,6 +102,9 @@ void LEDGrid::setup(const RaftJsonIF& config)
                 rslt ? "OK" : "FAILED", _ledPixels.getNumPixels(),
                 _pixelPowerPin, _pixelPowerActiveLevel ? "HIGH" : "LOW");
 #endif
+
+#endif
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -12,8 +12,6 @@
 #include "ConfigPinMap.h"
 #include "driver/gpio.h"
 
-static const char* MODULE_PREFIX = "LEDHeart";
-
 #define DEBUG_LED_HEART_PINS
 // #define USE_FIXED_TIMER_FOR_LED_BRIGHTNESS
 
@@ -35,6 +33,9 @@ LEDHeart::~LEDHeart()
 
 void LEDHeart::setup(const RaftJsonIF& config)
 {
+    // Display brightness
+    _displayBrightnessPC = config.getInt("brightnessPC", 100);
+
     // Get time between animation steps
     _animStepTimeUs = config.getInt("animStepTimeUs", ANIM_STEP_TIME_US_DEFAULT);
 
@@ -97,7 +98,7 @@ void LEDHeart::setup(const RaftJsonIF& config)
             ledPinsStr += ",";
         ledPinsStr += String(_ledPins[ledIdx]) + "(" + String(_ledIntensityFactors[ledIdx]) + ")";
     }
-    LOG_I(MODULE_PREFIX, "setup OK numLEDs %d activeLevel %d pin(intesity): %s", _ledPins.size(), _ledActiveLevel, ledPinsStr.c_str());
+    LOG_I(MODULE_PREFIX, "setup OK numLEDs %d activeLevel %d pin(intensity): %s", _ledPins.size(), _ledActiveLevel, ledPinsStr.c_str());
 #else
     LOG_I(MODULE_PREFIX, "setup OK numLEDs %d activeLevel %d", _ledPins.size(), _ledActiveLevel);
 #endif
@@ -160,7 +161,7 @@ void LEDHeart::handleAnimationStep()
             if (animStepIdx < _animationStepLevels.size())
             {
                 // Set animation off after time
-                int animOffTimeUs = _animationStepLevels[animStepIdx] * _ledIntensityFactors[ledIdx] * _displayBrightnessLevel;
+                int animOffTimeUs = _animationStepLevels[animStepIdx] * _ledIntensityFactors[ledIdx] * _displayBrightnessPC;
 
                 // Set LED state
 #ifdef FEATURE_HEART_ANIMATIONS

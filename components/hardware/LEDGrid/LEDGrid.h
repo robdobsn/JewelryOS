@@ -98,4 +98,7 @@ private:
             return 0;
         return _gridRaster[pixelIdx];
     }
+
+    // Debug
+    static constexpr const char* MODULE_PREFIX = "LEDGrid";
 };

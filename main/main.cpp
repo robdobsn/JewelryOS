@@ -9,16 +9,12 @@
 
 #include "RaftCoreApp.h"
 #include "RegisterSysMods.h"
-#include "DetectHardware.h"
 #include "Jewelry.h"
 
 // Entry point
 extern "C" void app_main(void)
 {
     RaftCoreApp raftCoreApp;
-
-    // Detect hardware
-    DetectHardware::detectHardware(raftCoreApp);
 
     // Register SysMods from RaftSysMods library
     RegisterSysMods::registerSysMods(raftCoreApp.getSysManager());

@@ -6,6 +6,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef FEATURE_OLD_LED_GRID
+
 #pragma once
 
 #include "LEDPatternBase.h"
@@ -71,3 +73,5 @@ private:
     uint32_t _curIter = 0;
     uint32_t _curHue = 0;
 };
+
+#endif // FEATURE_OLD_LED_GRID

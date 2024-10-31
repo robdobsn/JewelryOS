@@ -6,6 +6,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef FEATURE_OLD_LED_GRID
+
 #pragma once
 
 #include "LEDPatternBase.h"
@@ -194,3 +196,5 @@ private:
         // return false;
     }
 };
+
+#endif // FEATURE_OLD_LED_GRID

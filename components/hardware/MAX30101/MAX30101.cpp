@@ -304,8 +304,8 @@ bool MAX30101::writeRegister(uint8_t regNum, uint8_t regVal)
     // Write register
     std::vector<uint8_t> writeBuffer = {regNum, regVal};
     uint32_t numWritten = 0;
-    RaftI2CCentral::AccessResultCode rslt = _pI2C->access(_i2cAddr, writeBuffer.data(), writeBuffer.size(), nullptr, 0, numWritten);
-    if (rslt != RaftI2CCentral::ACCESS_RESULT_OK)
+    RaftRetCode rslt = _pI2C->access(_i2cAddr, writeBuffer.data(), writeBuffer.size(), nullptr, 0, numWritten);
+    if (rslt != RAFT_OK)
     {
         LOG_E(MODULE_PREFIX, "writeRegister FAILED i2cAddr 0x%x regNum 0x%x regVal 0x%x", (int)_i2cAddr, (int)regNum, (int)regVal);
         return false;
@@ -322,8 +322,8 @@ bool MAX30101::readRegisters(uint8_t startRegNum, std::vector<uint8_t>& readBuff
     // Read register
     std::vector<uint8_t> writeBuffer = {startRegNum};
     uint32_t numRead = 0;
-    RaftI2CCentral::AccessResultCode rslt = _pI2C->access(_i2cAddr, writeBuffer.data(), writeBuffer.size(), readBuffer.data(), readBuffer.size(), numRead);
-    if (rslt != RaftI2CCentral::ACCESS_RESULT_OK)
+    RaftRetCode rslt = _pI2C->access(_i2cAddr, writeBuffer.data(), writeBuffer.size(), readBuffer.data(), readBuffer.size(), numRead);
+    if (rslt != RAFT_OK)
     {
         LOG_E(MODULE_PREFIX, "readRegister FAILED i2cAddr 0x%x startRegNum 0x%x", (int)_i2cAddr, (int)startRegNum);
         return false;

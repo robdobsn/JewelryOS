@@ -26,8 +26,8 @@ add_compile_definitions(FEATURE_MAX30101_SENSOR)
 
 # Raft components
 set(RAFT_COMPONENTS
-    RaftSysMods@main
-    RaftI2C@main
+    RaftSysMods@feature-ble-central
+    RaftI2C@features-genericize-bus-devices
 )
 
 # File system
