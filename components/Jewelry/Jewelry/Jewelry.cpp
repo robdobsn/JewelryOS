@@ -11,32 +11,30 @@
 #include "RaftJson.h"
 #include "HeartEarring.h"
 #include "GridEarring.h"
-#include <RestAPIEndpointManager.h>
+#include "RestAPIEndpointManager.h"
 #include "esp_private/esp_clk.h"
 #include "esp_sleep.h"
-
-static const char *MODULE_PREFIX = "Jewelry";
 
 // Debug
 // #define DEBUG_MAIN_LOOP
 
 ///////////////////////////////////////////////////////////////////////////////
-// Constructor / Destructor
-///////////////////////////////////////////////////////////////////////////////
-
+/// @brief Constructor
+/// @param pModuleName 
+/// @param sysConfig 
 Jewelry::Jewelry(const char *pModuleName, RaftJsonIF& sysConfig) :
     RaftSysMod(pModuleName, sysConfig)
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// @brief Destructor
 Jewelry::~Jewelry()
 {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Setup
-///////////////////////////////////////////////////////////////////////////////
-
+/// @brief Setup
 void Jewelry::setup()
 {
     // Call base class
@@ -48,25 +46,21 @@ void Jewelry::setup()
     _powerControl.setup(powerControlConfig);
 #endif
 
-    // Check hardware type
-    String hwTypeStr = configGetString("hardwareType", "");
-
-    LOG_I(MODULE_PREFIX, "setup hardwareType %s config %s", hwTypeStr.c_str(), modConfig().getJsonDoc());
-
-    if (hwTypeStr == "heart")
-    {
-        // Setup heart earring
-        _pJewelry = new HeartEarring();
-        RaftJsonPrefixed heartConfig(modConfig(), "HeartEarring");
-        _pJewelry->setup(heartConfig);
-    }
-    else if (hwTypeStr == "grid")
-    {
-        // Setup grid earring
-        _pJewelry = new GridEarring();
-        RaftJsonPrefixed gridConfig(modConfig(), "GridEarring");
-        _pJewelry->setup(gridConfig);
-    }
+#if defined(FEATURE_HEART_JEWELRY)
+    // Setup heart earring
+    _pJewelry = new HeartEarring();
+    RaftJsonPrefixed heartConfig(modConfig(), "HeartEarring");
+    DeviceManager* pDevMan = getSysManager()->getDeviceManager();
+    if (pDevMan)
+        _pJewelry->setup(heartConfig, *pDevMan);
+#elif defined(FEATURE_GRID_JEWELRY)
+    // Setup grid earring
+    _pJewelry = new GridEarring();
+    RaftJsonPrefixed gridConfig(modConfig(), "GridEarring");
+    DeviceManager* pDevMan = getSysManager()->getDeviceManager();
+    if (pDevMan)
+        _pJewelry->setup(gridConfig, *pDevMan);
+#endif
 
     // Debug
 #ifdef DEBUG_USE_GPIO_PIN_FOR_TIMING
@@ -76,9 +70,7 @@ void Jewelry::setup()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Loop
-///////////////////////////////////////////////////////////////////////////////
-
+/// @brief Loop (called frequently)
 void Jewelry::loop()
 {
     // Check jewelry valid
@@ -151,9 +143,8 @@ void Jewelry::loop()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Endpoints
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// @brief Add REST API endpoints
+/// @param endpointManager
 void Jewelry::addRestAPIEndpoints(RestAPIEndpointManager &endpointManager)
 {
     // Control shade
@@ -164,9 +155,11 @@ void Jewelry::addRestAPIEndpoints(RestAPIEndpointManager &endpointManager)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Control via API
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// @brief API control
+/// @param reqStr
+/// @param respStr
+/// @param sourceInfo
+/// @return RaftRetCode
 RaftRetCode Jewelry::apiControl(const String &reqStr, String &respStr, const APISourceInfo& sourceInfo)
 {
     // Extract parameters
@@ -196,10 +189,33 @@ RaftRetCode Jewelry::apiControl(const String &reqStr, String &respStr, const API
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Get JSON status
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// @brief Get status JSON
+/// @return String
 String Jewelry::getStatusJSON() const
 {
     return "{}";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Get named value
+/// @param valueName
+/// @param isValid
+/// @return double
+double Jewelry::getNamedValue(const char* valueName, bool& isValid)
+{
+    LOG_I(MODULE_PREFIX, "----------------- getNamedValue %s", valueName);
+    isValid = true;
+    if (String(valueName).equalsIgnoreCase("batteryPC"))
+    {
+        battPC += 1;
+        if (battPC >= 100)
+            battPC = 0;
+        return battPC;
+    }
+    else if (String(valueName).equalsIgnoreCase("heartRate"))
+    {
+        return _pJewelry->getNamedValue(valueName, isValid);
+    }
+    isValid = false;
+    return 0;
 }

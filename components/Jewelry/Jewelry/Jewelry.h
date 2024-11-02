@@ -39,6 +39,9 @@ protected:
     // Status
     virtual String getStatusJSON() const override final;
 
+    // Get named value
+    virtual double getNamedValue(const char* valueName, bool& isValid) override final;
+
 private:
 
     // Debug
@@ -51,5 +54,11 @@ private:
     JewelryBase* _pJewelry = nullptr;
 
     // Helper functions
-    RaftRetCode apiControl(const String &reqStr, String &respStr, const APISourceInfo& sourceInfo);    
+    RaftRetCode apiControl(const String &reqStr, String &respStr, const APISourceInfo& sourceInfo);
+
+    // TODO - remove
+    int battPC = 0;
+
+    // Debug
+    static constexpr const char *MODULE_PREFIX = "Jewelry";
 };

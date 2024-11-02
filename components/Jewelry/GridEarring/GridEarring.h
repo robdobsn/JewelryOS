@@ -21,7 +21,7 @@ public:
     virtual ~GridEarring();
 
     // Setup
-    virtual void setup(const RaftJsonIF& config) override final;
+    virtual void setup(const RaftJsonIF& config, DeviceManager& devMan) override final;
 
     // Service
     virtual void loop() override final;

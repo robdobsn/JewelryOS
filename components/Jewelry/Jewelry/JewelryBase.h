@@ -14,6 +14,8 @@
 // Disable this when not debugging
 // #define DEBUG_USE_GPIO_PIN_FOR_TIMING 9
 
+class DeviceManager;
+
 class JewelryBase
 {
 public:
@@ -27,7 +29,7 @@ public:
     }
 
     // Setup
-    virtual void setup(const RaftJsonIF& config) = 0;
+    virtual void setup(const RaftJsonIF& config, DeviceManager& devMan) = 0;
 
     // Loop
     virtual void loop() = 0;
@@ -57,6 +59,16 @@ public:
     virtual String debugGetLastSamplesJSON()
     {
         return "";
+    }
+
+    /// @brief Get named value
+    /// @param valueName
+    /// @param isValid
+    /// @return double
+    virtual double getNamedValue(const char* valueName, bool& isValid)
+    {
+        isValid = false;
+        return 0;
     }
 
     // Get isInitialized

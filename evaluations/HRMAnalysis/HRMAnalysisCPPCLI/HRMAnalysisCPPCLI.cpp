@@ -43,6 +43,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < hrmDataRead.red_led_adc_values.size(); ++i)
     {
         hrmAnalysis.process(hrmDataRead.red_led_adc_values[i], hrmDataRead.timestamps[i]);
+        
         libCalcHeartRateHz.push_back(hrmAnalysis.getHeartRateHz());
         libCalcTimeToNextPeakMs.push_back(hrmAnalysis.getTimeToNextPeakMs(hrmDataRead.timestamps[i]));
         libCalcHeartRatePulseIntervalMs.push_back(hrmAnalysis.getHeartRatePulseIntervalMs());

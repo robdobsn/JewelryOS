@@ -21,7 +21,7 @@ GridEarring::~GridEarring()
 {
 }
 
-void GridEarring::setup(const RaftJsonIF& config)
+void GridEarring::setup(const RaftJsonIF& config, DeviceManager& devMan)
 {
     // Setup LED grid
     RaftJsonPrefixed configLEDGrid(config, "LEDGrid");

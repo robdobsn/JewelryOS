@@ -23,7 +23,7 @@ public:
     virtual ~HeartEarring();
 
     // Setup
-    virtual void setup(const RaftJsonIF& config) override final;
+    virtual void setup(const RaftJsonIF& config, DeviceManager& devMan) override final;
 
     // Loop
     virtual void loop() override final;
@@ -40,20 +40,38 @@ public:
     // Check if we should wakeup on GPIO
     bool wakeupOnGPIO()
     {
+#ifdef FEATURE_MAX30101_SENSOR
         return _max30101.wakeupOnGPIO();
+#else
+        return false;
+#endif
     }
 
     // Debug check if samples available
     virtual bool debugAreSamplesAvailable() override final
     {
+#ifdef FEATURE_MAX30101_SENSOR
         return _max30101.debugAreSamplesAvailable();
+#else
+        return false;
+#endif
     }
 
     // Debug get last samples JSON
     virtual String debugGetLastSamplesJSON() override final
     {
+#ifdef FEATURE_MAX30101_SENSOR
         return _max30101.debugGetLastSamplesJSON();
+#else
+        return "";
+#endif
     }
+
+    /// @brief Get named value
+    /// @param valueName
+    /// @param isValid
+    /// @return double
+    virtual double getNamedValue(const char* valueName, bool& isValid) override final;
 
 private:
     // Time between heart pulses
@@ -69,14 +87,21 @@ private:
     // Animation mode
     bool _isPulseStart = true;
 
+#ifdef FEATURE_MAX30101_SENSOR
     // MAX30101
     MAX30101 _max30101;
+#endif
 
+#ifdef FEATURE_I2C_STANDALONE
     // I2C
     BusI2CESPIDF _i2cCentral;
     int _sdaPin = -1;
     int _sclPin = -1;
     int _freq = 100000;
+#endif
+
+    // Raft bus device decode state
+    RaftBusDeviceDecodeState _decodeState;
 
     // LED heart display
     LEDHeart _ledHeart;
@@ -84,6 +109,12 @@ private:
     // HRM analysis
     HRMAnalysis _hrmAnalysis;
 
+    // Semaphore for access to heart rate anaylsis result
+    SemaphoreHandle_t _heartRateValueMutex = nullptr;
+    HRMAnalysis::HRMResult _hrmAnalysisResult;
+
     // Debug
     uint32_t _lastDebugTimeMs = 0;
+    static constexpr const char *MODULE_PREFIX = "HeartEarring";
+
 };

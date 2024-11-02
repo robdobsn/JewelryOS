@@ -19,6 +19,8 @@ static const char *MODULE_PREFIX = "MAX30101";
 #define DEBUG_HW_SETUP
 // #define DEBUG_POLL_RESULT
 // #define DEBUG_FIFO_DATA
+// #define DEBUG_FIFO_HEX_DATA_DUMP
+// #define DEBUG_FIFO_TIME_RED_IR_DUMP
 
 #define WARN_ON_HW_SETUP_FAILURE
 
@@ -169,6 +171,14 @@ void MAX30101::loop()
                 _sampleQueue.put(sampleData);
             }
 
+#ifdef DEBUG_FIFO_TIME_RED_IR_DUMP
+            String outStr;
+            for (uint32_t i = 0; i < numSamples; i++)
+            {
+                outStr += String(millis() - _sampleIntervalMs * (numSamples - i - 1)) + "," + String(newSamples[i]) + "\n";
+            }
+            printf("%s", outStr.c_str());
+#endif
             // Debug
             if (_collectHRM)
             {
@@ -201,6 +211,13 @@ void MAX30101::loop()
                             (int)numSamples, (int)writePtr, (int)readPtr);
 #endif
             }
+#ifdef DEBUG_FIFO_HEX_DATA_DUMP
+            String outStr;
+            Raft::getHexStrFromBytes(readBuffer.data(), readBuffer.size(), outStr);
+            char tmpStr[40];
+            snprintf(tmpStr, sizeof(tmpStr), "%02x%02x%02x", (int)writePtr, 0, (int)readPtr);
+            LOG_I(MODULE_PREFIX, "readData %s%s", tmpStr, outStr.c_str());
+#endif
         }
     }
 }

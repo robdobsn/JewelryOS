@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "RaftArduino.h"
 #include "IIRFilter4thOrder.h"
 #include "ZeroCrossingDetector.h"
 #include "PhaseLockedLoop.h"
@@ -28,7 +29,15 @@ public:
     ~HRMAnalysis()
     {
     }
-    void process(double sample, uint32_t sampleTimeMs)
+
+    struct HRMResult
+    {
+        double heartRateHz = 0;
+        uint32_t timeOfNextPeakMs = 0;
+        uint32_t heartRatePulseIntervalMs = 0;
+    };
+
+    HRMResult process(double sample, uint32_t sampleTimeMs)
     {
         // Filtering
         double filteredSample = _butterBandpassFilter.process(sample);
@@ -41,6 +50,11 @@ public:
         // Phase locked loop
         if (isZeroCrossing)
             _phaseLockedLoop.processZeroCrossing(sampleTimeMs);
+
+        // Return beat frequency
+        return HRMResult{getHeartRateHz(), 
+                    getTimeOfNextPeakMs(), 
+                    getHeartRatePulseIntervalMs()};
     }
 
     // Get heart rate
@@ -55,6 +69,14 @@ public:
         return _phaseLockedLoop.timeToNextPeakMs(curTimeMs);
     }
 
+    // Get time of next peak
+    uint32_t getTimeOfNextPeakMs()
+    {
+        uint32_t timeNowMs = millis();
+        uint32_t getTimeToNextPeakMs = _phaseLockedLoop.timeToNextPeakMs(timeNowMs);
+        return timeNowMs + getTimeToNextPeakMs;
+    }
+
     // Get heart rate pulse interval ms
     uint32_t getHeartRatePulseIntervalMs()
     {
@@ -66,10 +88,13 @@ public:
     bool _debugIsZeroCrossing = false;
 
 private:
+    // 25Hz sampling 8th order
     // static constexpr double _butterCoeff8A[] = {1.0, -6.05960751, 16.45391545, -26.18801509, 26.74607739, -17.95499326, 7.73746173, -1.9574456, 0.22281157};
     // static constexpr double _butterCoeff8B[] = {0.00336282, 0.0, -0.01345126, 0.0, 0.02017689, 0.0, -0.01345126, 0.0, 0.00336282};
     // // static constexpr double _butterZi[] = {-0.00336282, -0.00336282, 0.01008845, 0.01008845, -0.01008845, -0.01008845, 0.00336282, 0.00336282};
     // static constexpr double _butter8Zi[] = {0,0,0,0,0,0,0,0};
+
+    // 25Hz sampling 4th order
     static constexpr double _butterCoeff4A[] = {1.0, -2.99198635, 3.52764744, -1.97218019, 0.45044543};
     static constexpr double _butterCoeff4B[] = {0.05644846, 0.0, -0.11289692, 0.0, 0.05644846};
     static constexpr double _butterZi[] = {-0.05644846, -0.05644846, 0.05644846, 0.05644846};
