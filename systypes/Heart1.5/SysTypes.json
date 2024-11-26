@@ -1,0 +1,192 @@
+{
+    "SystemName": "Heart Earrings",
+    "Manufacturer": "Rob Dobson",
+    "CmdsAtStart": "",
+    "WebUI": "",
+    "SysManager": {
+        "monitorPeriodMs":30000,
+        "reportEnable":1,
+        "reportList":[
+            "NetMan",
+            "BLEMan",
+            "SysMan",
+            "StatsCB"
+        ],
+        "slowSysModMs": 100,
+        "pauseWiFiforBLE":1,
+        "supervisorEnable": 1,
+        "loopAllSysMods": 1
+    },
+    "ProtExchg": {
+        "enable": 0,
+        "RICSerial":{
+            "FrameBound":"0xE7",
+            "CtrlEscape":"0xD7"
+        }
+    },
+    "NetMan": {
+        "enable": 0,
+        "wifiSTAEn": 0,
+        "wifiAPEn": 0,
+        "ethEn": 0,
+        "wifiSSID": "",
+        "wifiPW": "",
+        "wifiSTAScanThreshold": "OPEN",
+        "wifiAPSSID": "",
+        "wifiAPPW": "",
+        "wifiAPChannel": 1,
+        "wifiAPMaxConn": 4,
+        "wifiAPAuthMode": "WPA2_PSK",
+        "NTPServer": "pool.ntp.org",
+        "timezone": "UTC",
+        "logLevel": "D"
+    },
+    "ESPOTAUpdate": {
+        "enable": 0,
+        "OTADirect": 1
+    },
+    "SerialConsole": {
+        "enable": 1,
+        "uartNum": 0,
+        "rxBuf": 5000,
+        "txBuf": 1500,
+        "crlfOnTx": 1,
+        "protocol": "RICSerial",
+        "logLevel": "D"
+    },
+    "CommandSerial": {
+        "enable": 0,
+        "logLevel": "D",
+        "ports": [
+        ]
+    },
+    "CommandSocket": {
+        "enable": 0,
+        "socketPort": 24,
+        "protocol": "RICSerial",
+        "logLevel": "D"
+    },
+    "FileManager": {
+        "enable": 0,
+        "LocalFsDefault": "littlefs",
+        "LocalFSFormatIfCorrupt": 1,
+        "CacheFileSysInfo": 0,
+        "SDEnabled": 0,
+        "DefaultSD": 1,
+        "SDMOSI": 15,
+        "SDMISO": 4,
+        "SDCLK": 14,
+        "SDCS": 13
+    },
+    "BLEMan": {
+        "enable": 1,
+        "central": 0,
+        "peripheral": 1,
+        "outQSize": 15,
+        "sendUseInd": 1,
+        "advIntervalMs": 200,
+        "connIntvPrefMs": 50,
+        "uuidCmdRespService": "aa76677e-9cfd-4626-a510-0d305be57c8d",
+        "uuidCmdRespCommand": "aa76677e-9cfd-4626-a510-0d305be57c8e",
+        "uuidCmdRespResponse": "aa76677e-9cfd-4626-a510-0d305be57c8f",
+        "stdServices":
+        [
+            {
+                "name": "Battery",
+                "enable": 1,
+                "notify": 1,
+                "read": 1,
+                "updateIntervalMs": 30000,
+                "settings": {
+                    "sysMod": "Jewelry",
+                    "namedValue": "batteryPC"
+                }
+            },
+            {
+                "name": "HeartRate",
+                "enable": 1,
+                "notify": 1,
+                "read": 1,
+                "updateIntervalMs": 500,
+                "settings": {
+                    "sysMod": "Jewelry",
+                    "namedValue": "heartRate"
+                }
+            },
+            {
+                "name": "DeviceInfo",
+                "enable": 1,
+                "read": 1
+            }
+        ],
+        "logLevel": "D",
+        "nimLogLev": "E"
+    },
+    "Publish": {
+        "enable": 1,
+        "pubList": [
+            {
+                "name": "devjson",
+                "trigger": "Change",
+                "msgID": "devjson",
+                "rates": []
+            }            
+        ]
+    },
+    "SamplesJSON": {
+        "enable": 0,
+        "rateLimHz": 0,
+        "maxJsonLen": 4000,
+        "jsonHdr": "{\"name\":\"hrmdata\"}",
+        "apiName": "hrmsamples",
+        "allocAtStart": true,
+        "dumpToConsole": false,
+        "dumpToFile": "samples.log",
+        "maxFileSize": 100000
+    },
+    "DevMan": {
+        "Buses": {
+            "buslist":
+            [
+                {
+                    "name": "I2CA",
+                    "type": "I2C",
+                    "sdaPin": 10,
+                    "sclPin": 2,
+                    "i2cFreq": 100000,
+                    "loopYieldMs": 20
+                }
+            ]
+        },        
+        "Devices":
+        [
+        ]
+    },    
+    "Jewelry": {
+        "HeartEarring":
+        {
+            "HRMSensor": {
+                "sampleRateHz": 25
+            },
+            "HRMFilter": {
+                "centreFreqHz": 1.25
+            },            
+            "LEDHeart": {
+                "brightnessPC": 100,
+                "ledPins": [6,8,3,5],
+                "ledIntensityFactor": [1,1,1,1],
+                "ledActiveLevel": 1,
+                "animStepTimeUs": 25000
+            }
+        },
+        "PowerControl":
+        {
+            "powerCtrlPin": 7,
+            "vsensePin": 4,
+            "batteryLowV": 3.55,
+            "vsenseButtonLevel": 2300,
+            "buttonOffTimeMs": 2000,
+            "adcCalib": { "v1":3.5, "a1":1434, "v2":4.2, "a2":1718 }
+        }
+    }
+}
