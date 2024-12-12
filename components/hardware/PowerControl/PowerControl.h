@@ -25,8 +25,12 @@ public:
     // Service
     void loop();
 
-    // Get voltage
-    float getVoltageFromADCReading(uint32_t adcReading);
+    // Get battery percent
+    uint8_t getBatteryPercent(bool &isValid)
+    {
+        isValid = _batteryPercentValid;
+        return _batteryPercent;
+    }
 
     // Check if shutdown initiated
     bool isShutdownRequested()
@@ -79,6 +83,10 @@ private:
     SimpleMovingAverage<100> _vsenseAvg;
     uint32_t _sampleCount = 0;
 
+    // Current battery percent
+    uint8_t _batteryPercent = 0;
+    bool _batteryPercentValid = false;
+
     // Debounce button
     bool _buttonPressed = false;
     uint32_t _buttonPressChangeTimeMs = 0;
@@ -88,8 +96,26 @@ private:
     static constexpr uint32_t BUTTON_OFF_TIME_MS_DEFAULT = 2000;
     uint32_t _buttonOffTimeMs = BUTTON_OFF_TIME_MS_DEFAULT;
 
+    // Power check time
+    static constexpr uint32_t POWER_CHECK_INTERVAL_MS = 100;
+    uint32_t _lastPowerCheckTimeMs = 0;
+
     // Debug
     uint32_t _lastDebugTimeMs = 0;
     uint32_t _lastWarnBatLowShutdownTimeMs = 0;
     uint32_t _lastWarnUserShutdownTimeMs = 0;
+
+    /// @brief  Get voltage from ADC reading
+    /// @param adcReading 
+    /// @return voltage
+    float getVoltageFromADCReading(uint32_t adcReading);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// @brief Get battery percentage from voltage
+    /// @param voltage
+    /// @return battery level percentage
+    double voltageToPercentage(double voltage);
+
+    // Debug
+    static constexpr const char *MODULE_PREFIX = "PowerControl";
 };

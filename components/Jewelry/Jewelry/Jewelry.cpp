@@ -203,14 +203,10 @@ String Jewelry::getStatusJSON() const
 /// @return double
 double Jewelry::getNamedValue(const char* valueName, bool& isValid)
 {
-    LOG_I(MODULE_PREFIX, "----------------- getNamedValue %s", valueName);
     isValid = true;
     if (String(valueName).equalsIgnoreCase("batteryPC"))
     {
-        battPC += 1;
-        if (battPC >= 100)
-            battPC = 0;
-        return battPC;
+        return _powerControl.getBatteryPercent(isValid);
     }
     else if (String(valueName).equalsIgnoreCase("heartRate"))
     {

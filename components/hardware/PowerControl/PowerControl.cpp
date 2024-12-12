@@ -14,17 +14,23 @@
 
 // #define DEBUG_USER_BUTTON_PRESS
 // #define DEBUG_POWER_CONTROL
+// #define DEBUG_BATTERY_PERCENT
 
-static const char *MODULE_PREFIX = "PowerControl";
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Constructor
 PowerControl::PowerControl()
 {
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Destructor
 PowerControl::~PowerControl()
 {
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Setup
+/// @param config
 void PowerControl::setup(RaftJsonIF& config)
 {
     // Get power control pin
@@ -92,14 +98,39 @@ void PowerControl::setup(RaftJsonIF& config)
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Loop
 void PowerControl::loop()
 {
     // Update VSENSE average
     if (_vsensePin < 0)
         return;
 
+    // Check time for power check
+    if (!Raft::isTimeout(millis(), _lastPowerCheckTimeMs, POWER_CHECK_INTERVAL_MS))
+        return;
+
+    // Check power
+    _lastPowerCheckTimeMs = millis();
+
     // Get VSENSE value
     uint32_t vsenseVal = analogRead(_vsensePin);
+
+    // Debug
+#ifdef DEBUG_POWER_CONTROL
+    if (Raft::isTimeout(millis(), _lastDebugTimeMs, 1000))
+    {
+        LOG_I(MODULE_PREFIX, "loop vSense %d avgVSense %d Vcalculated %.2fV battLowThreshold %.2fV sampleCount %d buttonLevel %d buttonPressed %d",
+                    analogRead(_vsensePin), 
+                    _vsenseAvg.getAverage(),
+                    getVoltageFromADCReading(_vsenseAvg.getAverage()),
+                    _batteryLowV,
+                    _sampleCount,
+                    _vsenseButtonLevel,
+                    _buttonPressed);
+        _lastDebugTimeMs = millis();
+    }
+#endif // DEBUG_POWER_CONTROL
 
     // The pushbutton is wired to VSENSE so if it is pressed the VSENSE pin
     // will go above a threshold
@@ -155,26 +186,19 @@ void PowerControl::loop()
         }
     }
 
-    // Debug
-#ifdef DEBUG_POWER_CONTROL
-    if (Raft::isTimeout(millis(), _lastDebugTimeMs, 1000))
-    {
-        LOG_I(MODULE_PREFIX, "loop vSense %d avgVSense %d Vcalculated %.2fV battLowThreshold %.2fV sampleCount %d buttonLevel %d",
-                    analogRead(_vsensePin), 
-                    _vsenseAvg.getAverage(),
-                    getVoltageFromADCReading(_vsenseAvg.getAverage()),
-                    _batteryLowV,
-                    _sampleCount,
-                    _vsenseButtonLevel);
-        _lastDebugTimeMs = millis();
-    }
-#endif // DEBUG_POWER_CONTROL
-
     // Check for shutdown due to battery low
     if (!_shutdownInitiated && (_sampleCount > 100))
     {
         // Get voltage
         float voltage = getVoltageFromADCReading(_vsenseAvg.getAverage());
+
+        // Get battery percentage
+        _batteryPercent = (uint8_t) voltageToPercentage(voltage);
+        _batteryPercentValid = true;
+
+#ifdef DEBUG_BATTERY_PERCENT
+        LOG_I(MODULE_PREFIX, "loop voltage %.2f batteryPercent %d", voltage, _batteryPercent);
+#endif // DEBUG_BATTERY_PERCENT
 
         // Check for shutdown
         if (voltage < _batteryLowV)
@@ -203,9 +227,9 @@ void PowerControl::loop()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Conversion of ADC value to voltage
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// @brief Get battery voltage from ADC reading
+/// @param adcReading
+/// @return float
 float PowerControl::getVoltageFromADCReading(uint32_t adcReading)
 {
     // Convert to voltage
@@ -213,9 +237,23 @@ float PowerControl::getVoltageFromADCReading(uint32_t adcReading)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Shutdown
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Get battery percentage from voltage
+/// @param voltage
+/// @return int
+double PowerControl::voltageToPercentage(double voltage) 
+{
+    double a = -161.89242958;
+    double b = 1774.25221818;
+    double c = -6333.43061713;
+    double d = 7397.02208126;
 
+    if (voltage > 4.2) return 100;
+    if (voltage < 3.3) return 0;
+    return a * std::pow(voltage, 3) + b * std::pow(voltage, 2) + c * voltage + d;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// @brief Shutdown
 void PowerControl::shutdown()
 {
     // Shutdown
