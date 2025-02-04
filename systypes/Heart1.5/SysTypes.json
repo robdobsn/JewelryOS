@@ -134,15 +134,14 @@
         ]
     },
     "SamplesJSON": {
-        "enable": 0,
+        "enable": 1,
         "rateLimHz": 0,
-        "maxJsonLen": 4000,
+        "maxJsonLen": 1000,
         "jsonHdr": "{\"name\":\"hrmdata\"}",
         "apiName": "hrmsamples",
         "allocAtStart": true,
-        "dumpToConsole": false,
-        "dumpToFile": "samples.log",
-        "maxFileSize": 100000
+        "dumpToConsole": true,
+        "maxFileSize": 1000000
     },
     "DevMan": {
         "Buses": {
@@ -165,6 +164,7 @@
     "Jewelry": {
         "HeartEarring":
         {
+            "collectHRM": 1,
             "HRMSensor": {
                 "sampleRateHz": 25
             },
@@ -172,11 +172,25 @@
                 "centreFreqHz": 1.25
             },            
             "LEDHeart": {
-                "brightnessPC": 100,
+                "brightnessPC": 20,
                 "ledPins": [6,8,3,5],
                 "ledIntensityFactor": [1,1,1,1],
                 "ledActiveLevel": 1,
                 "animStepTimeUs": 25000
+            },
+            "sdaPin": 10,
+            "sclPin": 2,
+            "i2cFreq": 100000,
+            "MAX30101": {
+                "i2cAddr": 87,
+                "redLedIntensity": "0x1f",
+                "sampleAverage": 4,
+                "sampleRateHz": 100,
+                "pulseWidthUs": 411,
+                "adcRange": 4096,
+                "fifoAlmostFullThreshold": 17,
+                "fifoFullPin": 0,
+                "wakeupOnFifoFull": true
             }
         },
         "PowerControl":

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "RaftArduino.h"
 #include "IIRFilter4thOrder.h"
 #include "ZeroCrossingDetector.h"
 #include "PhaseLockedLoop.h"
@@ -53,7 +52,7 @@ public:
 
         // Return beat frequency
         return HRMResult{getHeartRateHz(), 
-                    getTimeOfNextPeakMs(), 
+                    getTimeOfNextPeakMs(sampleTimeMs), 
                     getHeartRatePulseIntervalMs()};
     }
 
@@ -70,11 +69,10 @@ public:
     }
 
     // Get time of next peak
-    uint32_t getTimeOfNextPeakMs()
+    uint32_t getTimeOfNextPeakMs(uint32_t curTimeMs)
     {
-        uint32_t timeNowMs = millis();
-        uint32_t getTimeToNextPeakMs = _phaseLockedLoop.timeToNextPeakMs(timeNowMs);
-        return timeNowMs + getTimeToNextPeakMs;
+        uint32_t getTimeToNextPeakMs = _phaseLockedLoop.timeToNextPeakMs(curTimeMs);
+        return curTimeMs + getTimeToNextPeakMs;
     }
 
     // Get heart rate pulse interval ms

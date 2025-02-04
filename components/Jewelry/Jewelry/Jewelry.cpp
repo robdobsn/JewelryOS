@@ -101,14 +101,20 @@ void Jewelry::loop()
         }
 #endif
 
-        // Update data collection if enabled
-        if (_pJewelry->debugAreSamplesAvailable())
+        // Check if we have a sample collector
+        if (!_pSampleCollector)
         {
-            String samplesJSON = _pJewelry->debugGetLastSamplesJSON();
-            if (samplesJSON.length() > 0)
+            if (_firstSampleCollection)
             {
-                sysModSendCmdJSON("SamplesJSON", samplesJSON.c_str());
+                _firstSampleCollection = false;
+                _pSampleCollector = getSysManager()->getSysMod("SamplesJSON");
             }
+        }
+
+        // Update data collection if enabled
+        if (_pSampleCollector && _pJewelry->debugAreSamplesAvailable())
+        {
+            _pSampleCollector->receiveCmdJSON(_pJewelry->debugGetLastSamplesJSON().c_str());
         }
     }
 

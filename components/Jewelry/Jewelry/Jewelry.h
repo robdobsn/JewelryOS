@@ -53,6 +53,10 @@ private:
     // Jewelry
     JewelryBase* _pJewelry = nullptr;
 
+    // Sample collector SysMod
+    RaftSysMod* _pSampleCollector = nullptr;
+    bool _firstSampleCollection = true;
+
     // Helper functions
     RaftRetCode apiControl(const String &reqStr, String &respStr, const APISourceInfo& sourceInfo);
 

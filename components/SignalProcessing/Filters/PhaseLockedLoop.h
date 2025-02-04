@@ -17,14 +17,15 @@
 class PhaseLockedLoop
 {
 public:
-    PhaseLockedLoop(float minFreqHz, float maxFreqHz, float centreFreqHz,
-                float maxPIDOutput, 
-                float kP, float kI, float kD) :
-        _frequencyPID(kP, kI, kD, maxPIDOutput, -maxPIDOutput)
+    PhaseLockedLoop(double minFreqHz, double maxFreqHz, double centreFreqHz,
+                double maxPIDOutput, 
+                double kP, double kI, double kD) :
+        _frequencyPID(kP, kI, kD, maxPIDOutput, -maxPIDOutput),
+        _maxFreqHz(maxFreqHz), 
+        _minFreqHz(minFreqHz), 
+        _centreFreqHz(centreFreqHz),
+        _beatFreqHz(centreFreqHz)
     {
-        _maxFreqHz = maxFreqHz;
-        _minFreqHz = minFreqHz;
-        _centreFreqHz = centreFreqHz;
     }
     ~PhaseLockedLoop()
     {
@@ -35,33 +36,33 @@ public:
         {
             _zeroCrossingFirstMs = sampleTimeMs;
             _lastZeroCrossingMs = sampleTimeMs;
+            _beatFreqHz = _centreFreqHz;
             return;
         }
 
         // Check valid
-        if (sampleTimeMs <= _lastZeroCrossingMs)
+        if (sampleTimeMs <= _lastZeroCrossingMs + 1)
             return;
 
         // Time between zero crossings
         uint32_t intervalMs = sampleTimeMs - _lastZeroCrossingMs;
+        if (intervalMs == 0)
+            return;
 
         // Save last zero crossing
         _lastZeroCrossingMs = sampleTimeMs;
 
         // Calculate frequency based on time between zero crossings
-        float measuredFreqHz = 1000.0 / intervalMs;
+        double measuredFreqHz = 1000.0 / intervalMs;
+        measuredFreqHz = std::clamp(measuredFreqHz, _minFreqHz, _maxFreqHz);
 
         // printf("PLL: %f %f %f %f\n", measuredFreqHz, _beatFreqHz, _frequencyPID.getMin(), _frequencyPID.getMax());
 
-        // Check in valid range
-        if ((measuredFreqHz < _minFreqHz) || (measuredFreqHz > _maxFreqHz))
-            measuredFreqHz = _centreFreqHz;
-
         // Update PID
 #ifdef DEBUG_PLL
-        float prevFreq = _beatFreqHz;
+        double prevFreq = _beatFreqHz;
 #endif
-        _beatFreqHz -= _frequencyPID.process(_beatFreqHz, measuredFreqHz, intervalMs) * 0.1;
+        _beatFreqHz -= _frequencyPID.process(_beatFreqHz, measuredFreqHz, intervalMs) * _scalingFactor;
 
 #ifdef DEBUG_PLL
         printf(" prev beatFreq %f beatFreq %f\n", prevFreq, _beatFreqHz);
@@ -84,17 +85,18 @@ public:
         return timeToNextPeakMs;
     }
 
-    float getBeatFreqHz()
+    double getBeatFreqHz()
     {
         return _beatFreqHz;
     }
 
 private:
-    float _beatFreqHz = 1.0;
+    double _beatFreqHz = 1.0;
     uint32_t _zeroCrossingFirstMs = 0;
     uint32_t _lastZeroCrossingMs = 0;
     PIDControl _frequencyPID;
-    float _maxFreqHz = 3.5;
-    float _minFreqHz = 0.5;
-    float _centreFreqHz = 1;
+    double _scalingFactor = 0.1;
+    double _maxFreqHz = 3.5;
+    double _minFreqHz = 0.5;
+    double _centreFreqHz = 1;
 };

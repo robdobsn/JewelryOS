@@ -53,7 +53,16 @@ public:
 #ifdef FEATURE_MAX30101_SENSOR
         return _max30101.debugAreSamplesAvailable();
 #else
-        return false;
+        bool isAvailable = false;
+        if (_lastSamplesJSONMutex && (xSemaphoreTake(_lastSamplesJSONMutex, 2) == pdTRUE))
+        {
+            // Flag
+            isAvailable = _lastSamplesJSON.length() > 0;
+
+            // Give back the semaphore
+            xSemaphoreGive(_lastSamplesJSONMutex);
+        }
+        return isAvailable;       
 #endif
     }
 
@@ -63,7 +72,17 @@ public:
 #ifdef FEATURE_MAX30101_SENSOR
         return _max30101.debugGetLastSamplesJSON();
 #else
-        return "";
+        String samplesJSON;
+        if (_lastSamplesJSONMutex && (xSemaphoreTake(_lastSamplesJSONMutex, 2) == pdTRUE))
+        {
+            // Flag
+            samplesJSON = _lastSamplesJSON;
+            _lastSamplesJSON = "";
+
+            // Give back the semaphore
+            xSemaphoreGive(_lastSamplesJSONMutex);
+        }    
+        return samplesJSON;
 #endif
     }
 
@@ -112,6 +131,11 @@ private:
     // Semaphore for access to heart rate anaylsis result
     SemaphoreHandle_t _heartRateValueMutex = nullptr;
     HRMAnalysis::HRMResult _hrmAnalysisResult;
+
+    // HRM samples
+    bool _collectHRM = false;
+    String _lastSamplesJSON;
+    SemaphoreHandle_t _lastSamplesJSONMutex = nullptr;
 
     // Debug
     uint32_t _lastDebugTimeMs = 0;

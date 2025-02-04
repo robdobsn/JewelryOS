@@ -172,12 +172,14 @@ void MAX30101::loop()
             }
 
 #ifdef DEBUG_FIFO_TIME_RED_IR_DUMP
+            {
             String outStr;
             for (uint32_t i = 0; i < numSamples; i++)
             {
                 outStr += String(millis() - _sampleIntervalMs * (numSamples - i - 1)) + "," + String(newSamples[i]) + "\n";
             }
             printf("%s", outStr.c_str());
+            }
 #endif
             // Debug
             if (_collectHRM)
@@ -212,11 +214,13 @@ void MAX30101::loop()
 #endif
             }
 #ifdef DEBUG_FIFO_HEX_DATA_DUMP
+            {
             String outStr;
             Raft::getHexStrFromBytes(readBuffer.data(), readBuffer.size(), outStr);
             char tmpStr[40];
             snprintf(tmpStr, sizeof(tmpStr), "%02x%02x%02x", (int)writePtr, 0, (int)readPtr);
             LOG_I(MODULE_PREFIX, "readData %s%s", tmpStr, outStr.c_str());
+            }
 #endif
         }
     }

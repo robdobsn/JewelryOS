@@ -5,17 +5,6 @@ import csv
 BYTE_GROUP_LENGTH = 51  # Length of each data group in bytes
 TIME_INCREMENT = 0.04   # 40 ms increment for each sample in seconds
 
-def parse_read_data(line):
-    """Extracts the timestamp and readData field from a given line and converts to bytes."""
-    time_match = re.search(r'I \((\d+)\)', line)
-    data_match = re.search(r'readData\s([0-9a-fA-F]+)', line)
-    
-    if time_match and data_match:
-        timestamp = int(time_match.group(1)) / 1000.0  # Convert milliseconds to seconds
-        hex_data = data_match.group(1)
-        return timestamp, bytes.fromhex(hex_data)
-    return None, None
-
 def extract_data_groups(data, initial_timestamp):
     """Parses the 51 bytes of data according to the specified algorithm."""
     parsed_data = []
@@ -44,25 +33,51 @@ def extract_data_groups(data, initial_timestamp):
 
     return parsed_data
 
+def parse_read_data(line):
+    """Extract the timestamp and readData field from a given line and converts to bytes."""
+    time_match = re.search(r'I \((\d+)\)', line)
+    data_match = re.search(r'readData\s([0-9a-fA-F]+)', line)
+    
+    if time_match and data_match:
+        timestamp = int(time_match.group(1)) / 1000.0  # Convert milliseconds to seconds
+        hex_data = data_match.group(1)
+        groups = extract_data_groups(bytes.fromhex(hex_data), timestamp)
+        return groups
+
+    """ Extract the time and data from addSample line"""
+    """ I (693362) SampleColl: addSample {"t":[37871,37911,37951,37991,38031],"r":[2542467,2542451,2542434,2542406,2542360],"i":[2827440,2827435,2827411,2827341,2827263]}"""
+    json_data_match = re.search(r'addSample\s(.+)', line)
+    groups = []
+    if json_data_match:
+        import json
+        json_data = json_data_match.group(1)
+        # Parse the JSON data
+        extracted_data = json.loads(json_data)
+        timeSeries = extracted_data["t"]
+        redSeries = extracted_data["r"]
+        irSeries = extracted_data["i"]
+        for i in range(len(timeSeries)):
+            groups.append({"Time (s)": round(timeSeries[i] / 1000.0, 2), "Red": redSeries[i], "IR": irSeries[i]})
+    return groups
+
 def main(input_file, output_file):
     with open(input_file, 'r') as file, open(output_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["Time (s)", "Red", "IR"])  # Write header
 
         for line in file:
-            if 'readData' in line:
-                initial_timestamp, data = parse_read_data(line)
-                if data:
-                    groups = extract_data_groups(data, initial_timestamp)
-                    for group in groups:
-                        writer.writerow([f"{group['Time (s)']:.2f}", group["Red"], group["IR"]])
+            groups = parse_read_data(line)
+            for group in groups:
+                writer.writerow([f"{group['Time (s)']:.2f}", group["Red"], group["IR"]])
 
 # Run the script with your file
 # input_file = "20241031-221727.log"
 # input_file = "20241031-230713.log"
 # input_file = "20241031-233740.log"
 # input_file = "20241031-234442.log"
-input_file = "20241101-004359.log"
+# input_file = "20241101-004359.log"
+# input_file = "20250203-182115.log"
+input_file = "20250203-185448.log"
 output_file = input_file + ".csv"
 main(input_file, output_file)
 print("CSV file created:", output_file)

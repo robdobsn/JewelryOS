@@ -23,8 +23,9 @@
 /// @brief Constructor
 HeartEarring::HeartEarring()
 {
-    // Mutex
+    // Mutexes
     _heartRateValueMutex = xSemaphoreCreateMutex();
+    _lastSamplesJSONMutex = xSemaphoreCreateMutex();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +41,9 @@ void HeartEarring::setup(const RaftJsonIF& config, DeviceManager& devMan)
     // Setup LED heart
     RaftJsonPrefixed configLEDHeart(config, "LEDHeart");
     _ledHeart.setup(configLEDHeart);
+
+    // Collect HRM samples
+    _collectHRM = config.getBool("collectHRM", false);
 
 #ifdef FEATURE_I2C_STANDALONE
     // Get I2C details
@@ -116,6 +120,34 @@ void HeartEarring::setup(const RaftJsonIF& config, DeviceManager& devMan)
 
                 // Give back the semaphore
                 xSemaphoreGive(_heartRateValueMutex);
+            }
+
+            // Sample collection
+            if (_collectHRM)
+            {                
+                // For sample JSON 
+                String irJson, redJson, timeJson;
+                irJson.reserve(recsDecoded * 10);
+                redJson.reserve(recsDecoded * 10);
+                timeJson.reserve(recsDecoded * 10);
+                for (uint32_t i = 0; i < recsDecoded; i++)
+                {
+                    irJson += (i==0 ? "" : ",") + String(deviceData[i].IR);
+                    redJson += (i==0 ? "" : ",") + String(deviceData[i].Red);
+                    timeJson += (i==0 ? "" : ",") + String(deviceData[i].timeMs);
+                }
+                if (_lastSamplesJSONMutex && (xSemaphoreTake(_lastSamplesJSONMutex, 2) == pdTRUE))
+                {
+                    // Store JSON
+                    _lastSamplesJSON = "{\"t\":[" + timeJson + "],\"r\":[" + redJson + "],\"i\":[" + irJson + "]}";
+
+                    // Give back the semaphore
+                    xSemaphoreGive(_lastSamplesJSONMutex);                    
+                }
+            
+#ifdef DEBUG_FIFO_DATA
+                LOG_I(MODULE_PREFIX, "loop samples time %s red %s IR %s", timeJson.c_str(), redJson.c_str(), irJson.c_str());
+#endif
             }
         },
         50

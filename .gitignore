@@ -12,4 +12,5 @@ scripts/config.ini
 .venv
 test/eepromPartitionTest/prewritedata.bin
 test/eepromPartitionTest/readbackdata.bin
+raftcli_history.txt
 
