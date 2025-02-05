@@ -22,7 +22,7 @@ public:
 
         // Phase locked loop
         // Parameters set highest and lowest expected heart rate in Hz and max PID output (+/-)
-        _phaseLockedLoop(freqBandLowerHz, freqBandUpperHz, freqCentreHz, maxPIDOutput, pK_PID, pI_PID, pD_PID)
+        _phaseLockedLoop(freqBandLowerHz, freqBandUpperHz, freqCentreHz, maxPIDOutput, kP_PID, kI_PID, kD_PID)
     {
     }
     ~HRMAnalysis()
@@ -97,9 +97,9 @@ private:
     static constexpr double _butterCoeff4B[] = {0.05644846, 0.0, -0.11289692, 0.0, 0.05644846};
     static constexpr double _butterZi[] = {-0.05644846, -0.05644846, 0.05644846, 0.05644846};
     static constexpr float maxPIDOutput = 1.0;
-    static constexpr float pK_PID = 1;
-    static constexpr float pI_PID = 0.001;
-    static constexpr float pD_PID = 0.4;
+    static constexpr float kP_PID = 1;
+    static constexpr float kI_PID = 0.001;
+    static constexpr float kD_PID = 0.4;
 
     IIRFilter4thOrder _butterBandpassFilter;
     ZeroCrossingDetector _zeroCrossingDetector;

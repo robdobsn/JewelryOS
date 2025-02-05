@@ -150,7 +150,7 @@
                 {
                     "name": "I2CA",
                     "type": "I2C",
-                    "sdaPin": 10,
+                    "sdaPin": 8,
                     "sclPin": 2,
                     "i2cFreq": 100000,
                     "loopYieldMs": 20
@@ -173,12 +173,12 @@
             },            
             "LEDHeart": {
                 "brightnessPC": 20,
-                "ledPins": [6,8,3,5],
+                "ledPins": [6,10,3,5],
                 "ledIntensityFactor": [1,1,1,1],
                 "ledActiveLevel": 1,
                 "animStepTimeUs": 25000
             },
-            "sdaPin": 10,
+            "sdaPin": 8,
             "sclPin": 2,
             "i2cFreq": 100000,
             "MAX30101": {

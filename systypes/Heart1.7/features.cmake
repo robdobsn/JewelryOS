@@ -19,7 +19,7 @@ add_compile_definitions(FEATURE_POWER_CONTROL_SETUP)
 # add_compile_definitions(FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN)
 
 # Enable heart LED animations
-add_compile_definitions(FEATURE_HEART_ANIMATIONS)
+# add_compile_definitions(FEATURE_HEART_ANIMATIONS)
 
 # Enable MAX30101 sensor and stand-alone I2C bus
 # add_compile_definitions(FEATURE_MAX30101_SENSOR)

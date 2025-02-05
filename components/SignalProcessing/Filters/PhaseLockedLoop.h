@@ -91,12 +91,12 @@ public:
     }
 
 private:
-    double _beatFreqHz = 1.0;
     uint32_t _zeroCrossingFirstMs = 0;
     uint32_t _lastZeroCrossingMs = 0;
     PIDControl _frequencyPID;
-    double _scalingFactor = 0.1;
     double _maxFreqHz = 3.5;
     double _minFreqHz = 0.5;
-    double _centreFreqHz = 1;
+    double _centreFreqHz;
+    double _beatFreqHz = 1.0;
+    double _scalingFactor = 0.1;
 };
