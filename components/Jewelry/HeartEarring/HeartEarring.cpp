@@ -94,21 +94,28 @@ void HeartEarring::setup(const RaftJsonIF& config, DeviceManager& devMan)
                     deviceData[0].timeMs, deviceData[0].Red, deviceData[0].IR);
 #endif
 
+#ifdef DEBUG_HEART_RATE_SAMPLES
+            String debugStr;
+#endif
             // Process HRM value
             HRMAnalysis::HRMResult analysisResult;
             for (uint32_t i = 0; i < recsDecoded; i++)
             {
                 // Process HRM value
                 analysisResult = _hrmAnalysis.process(deviceData[i].Red, deviceData[i].timeMs);
+
+#ifdef DEBUG_HEART_RATE_SAMPLES
+                // Debug
+                debugStr += String(deviceData[i].timeMs) + "," + String(deviceData[i].Red) + "," + String(deviceData[i].IR) + "," + String(_hrmAnalysis._debugFilteredSample) + "," + String(_hrmAnalysis._debugIsZeroCrossing) + ";";
+#endif
             }
 
 #ifdef DEBUG_HEART_RATE_SAMPLES
             // Debug
-            LOG_I(MODULE_PREFIX, "loop filt %.3f z %d heartRateBPM %.3f (%.3fHz)",
-                    _hrmAnalysis._debugFilteredSample,
-                    _hrmAnalysis._debugIsZeroCrossing,
+            LOG_I(MODULE_PREFIX, "loop BPM %.3f (%.3fHz) %s",
                     analysisResult.heartRateHz * 60,
-                    analysisResult.heartRateHz);
+                    analysisResult.heartRateHz,
+                    debugStr.c_str());
 #endif
 
             // Take the semaphore controlling access to heart rate value

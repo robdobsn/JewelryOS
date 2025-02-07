@@ -19,7 +19,7 @@ public:
     ~ZeroCrossingDetector()
     {
     }
-    bool process(int sample)
+    bool process(int sample, bool bothEdges)
     {
         // Check for first sample
         if (_isFirstSample)
@@ -32,6 +32,10 @@ public:
         // Check for zero crossing
         bool result = false;
         if (_lastSampleWasPositive && (sample < 0))
+        {
+            result = true;
+        }
+        else if (bothEdges && (!_lastSampleWasPositive && (sample >= 0)))
         {
             result = true;
         }

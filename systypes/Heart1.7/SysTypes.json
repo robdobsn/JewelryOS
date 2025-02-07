@@ -134,7 +134,7 @@
         ]
     },
     "SamplesJSON": {
-        "enable": 1,
+        "enable": 0,
         "rateLimHz": 0,
         "maxJsonLen": 0,
         "jsonHdr": "{\"name\":\"hrmdata\"}",

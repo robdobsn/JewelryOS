@@ -16,7 +16,7 @@
 class HRMAnalysis
 {
 public:
-    HRMAnalysis(float freqBandLowerHz = 0.75, float freqBandUpperHz = 3.0, float freqCentreHz = 1.0) :
+    HRMAnalysis(double freqBandLowerHz = 0.75, double freqBandUpperHz = 3.0, double freqCentreHz = 1.0) :
         // Bandpass filter
         _butterBandpassFilter(_butterCoeff4A, _butterCoeff4B, _butterZi),
 
@@ -43,7 +43,7 @@ public:
         _debugFilteredSample = filteredSample;
         
         // Zero crossing detector
-        bool isZeroCrossing = _zeroCrossingDetector.process(filteredSample);
+        bool isZeroCrossing = _zeroCrossingDetector.process(filteredSample, false);
         _debugIsZeroCrossing = isZeroCrossing;
 
         // Phase locked loop
@@ -96,10 +96,10 @@ private:
     static constexpr double _butterCoeff4A[] = {1.0, -2.99198635, 3.52764744, -1.97218019, 0.45044543};
     static constexpr double _butterCoeff4B[] = {0.05644846, 0.0, -0.11289692, 0.0, 0.05644846};
     static constexpr double _butterZi[] = {-0.05644846, -0.05644846, 0.05644846, 0.05644846};
-    static constexpr float maxPIDOutput = 1.0;
-    static constexpr float kP_PID = 1;
-    static constexpr float kI_PID = 0.001;
-    static constexpr float kD_PID = 0.4;
+    static constexpr double maxPIDOutput = 10.0;
+    static constexpr double kP_PID = 0.00005;
+    static constexpr double kI_PID = 0.000005;
+    static constexpr double kD_PID = 0.0005;
 
     IIRFilter4thOrder _butterBandpassFilter;
     ZeroCrossingDetector _zeroCrossingDetector;

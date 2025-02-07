@@ -98,5 +98,5 @@ private:
     double _minFreqHz = 0.5;
     double _centreFreqHz;
     double _beatFreqHz = 1.0;
-    double _scalingFactor = 0.1;
+    double _scalingFactor = 1.0;
 };
