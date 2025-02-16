@@ -84,8 +84,8 @@
         "peripheral": 1,
         "outQSize": 15,
         "sendUseInd": 1,
-        "advIntervalMs": 200,
-        "connIntvPrefMs": 50,
+        "advIntervalMs": 20,
+        "connIntvPrefMs": 15,
         "uuidCmdRespService": "aa76677e-9cfd-4626-a510-0d305be57c8d",
         "uuidCmdRespCommand": "aa76677e-9cfd-4626-a510-0d305be57c8e",
         "uuidCmdRespResponse": "aa76677e-9cfd-4626-a510-0d305be57c8f",
@@ -126,11 +126,17 @@
         "enable": 1,
         "pubList": [
             {
-                "name": "devjson",
+                "topic": "devjson",
                 "trigger": "Change",
-                "msgID": "devjson",
+                "minStateChangeMs":10,
                 "rates": []
-            }            
+            },
+            {
+                "topic": "devbin",
+                "trigger": "Change",
+                "minStateChangeMs":10,
+                "rates": []
+            }
         ]
     },
     "SamplesJSON": {

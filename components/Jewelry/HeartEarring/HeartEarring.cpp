@@ -209,6 +209,8 @@ void HeartEarring::loop()
     }
 #endif
 
+#ifdef FEATURE_HEART_ANIMATIONS
+
     // Check animation step
     uint64_t timeNowUs = micros();
     _nextSleepDurationUs = 0;
@@ -251,6 +253,7 @@ void HeartEarring::loop()
             }
         }
     }
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

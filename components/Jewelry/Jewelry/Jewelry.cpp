@@ -17,6 +17,7 @@
 
 // Debug
 // #define DEBUG_MAIN_LOOP
+// #define DEBUG_GET_NAMED_VALUE
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @brief Constructor
@@ -209,18 +210,24 @@ String Jewelry::getStatusJSON() const
 /// @return double
 double Jewelry::getNamedValue(const char* valueName, bool& isValid)
 {
-    LOG_I(MODULE_PREFIX, "----------------- getNamedValue %s", valueName);
     isValid = true;
     if (String(valueName).equalsIgnoreCase("batteryPC"))
     {
         battPC += 1;
         if (battPC >= 100)
             battPC = 0;
+#ifdef DEBUG_GET_NAMED_VALUE
+        LOG_I(MODULE_PREFIX, "getNamedValue %s = %d", valueName, battPC);
+#endif
         return battPC;
     }
     else if (String(valueName).equalsIgnoreCase("heartRate"))
     {
-        return _pJewelry->getNamedValue(valueName, isValid);
+        double val = _pJewelry->getNamedValue(valueName, isValid);
+#ifdef DEBUG_GET_NAMED_VALUE
+        LOG_I(MODULE_PREFIX, "getNamedValue %s = %.2f", valueName, val);
+#endif
+        return val;
     }
     isValid = false;
     return 0;

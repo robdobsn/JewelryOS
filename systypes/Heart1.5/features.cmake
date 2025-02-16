@@ -13,13 +13,13 @@ add_compile_definitions(FEATURE_POWER_CONTROL_SETUP)
 
 # Enable power control function check user shutdown - this will check the power
 # button for user input to shutdown the device
-# add_compile_definitions(FEATURE_POWER_CONTROL_USER_SHUTDOWN)
+add_compile_definitions(FEATURE_POWER_CONTROL_USER_SHUTDOWN)
 
 # Enable power control function for low battery shutdown
-# add_compile_definitions(FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN)
+add_compile_definitions(FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN)
 
 # Enable heart LED animations
-add_compile_definitions(FEATURE_HEART_ANIMATIONS)
+# add_compile_definitions(FEATURE_HEART_ANIMATIONS)
 
 # Enable MAX30101 sensor and stand-alone I2C bus
 # add_compile_definitions(FEATURE_MAX30101_SENSOR)
