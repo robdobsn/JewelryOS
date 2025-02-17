@@ -83,6 +83,7 @@
         "central": 0,
         "peripheral": 1,
         "outQSize": 15,
+        "minMsBetweenSends": 100,
         "sendUseInd": 1,
         "advIntervalMs": 20,
         "connIntvPrefMs": 15,
