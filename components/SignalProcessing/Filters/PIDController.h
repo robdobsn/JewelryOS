@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <algorithm>
 
 // #define DEBUG_PID_CONTROLLER
 

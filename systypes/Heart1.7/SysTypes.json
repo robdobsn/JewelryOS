@@ -84,7 +84,7 @@
         "peripheral": 1,
         "outQSize": 15,
         "minMsBetweenSends": 100,
-        "sendUseInd": 1,
+        "sendUseInd": 0,
         "advIntervalMs": 20,
         "connIntvPrefMs": 15,
         "uuidCmdRespService": "aa76677e-9cfd-4626-a510-0d305be57c8d",
@@ -184,20 +184,6 @@
                 "ledIntensityFactor": [1,1,1,1],
                 "ledActiveLevel": 1,
                 "animStepTimeUs": 25000
-            },
-            "sdaPin": 8,
-            "sclPin": 2,
-            "i2cFreq": 100000,
-            "MAX30101": {
-                "i2cAddr": 87,
-                "redLedIntensity": "0x1f",
-                "sampleAverage": 4,
-                "sampleRateHz": 100,
-                "pulseWidthUs": 411,
-                "adcRange": 4096,
-                "fifoAlmostFullThreshold": 17,
-                "fifoFullPin": 0,
-                "wakeupOnFifoFull": true
             }
         },
         "PowerControl":

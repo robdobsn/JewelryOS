@@ -24,8 +24,8 @@
 HeartEarring::HeartEarring()
 {
     // Mutexes
-    _heartRateValueMutex = xSemaphoreCreateMutex();
-    _lastSamplesJSONMutex = xSemaphoreCreateMutex();
+    RaftMutex_init(_heartRateValueMutex);
+    RaftMutex_init(_lastSamplesJSONMutex);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,34 +44,6 @@ void HeartEarring::setup(const RaftJsonIF& config, DeviceManager& devMan)
 
     // Collect HRM samples
     _collectHRM = config.getBool("collectHRM", false);
-
-#ifdef FEATURE_I2C_STANDALONE
-    // Get I2C details
-    String pinName = config.getString("sdaPin", "");
-    _sdaPin = ConfigPinMap::getPinFromName(pinName.c_str());
-    pinName = config.getString("sclPin", "");
-    _sclPin = ConfigPinMap::getPinFromName(pinName.c_str());
-    _freq = config.getLong("i2cFreq", 100000);
-
-    // Check valid
-    if ((_sdaPin < 0) || (_sclPin < 0))
-    {
-        LOG_E(MODULE_PREFIX, "setup I2C pins not specified");
-        return;
-    }
-    // Setup I2C
-    bool i2cOk = _i2cCentral.init(0, _sdaPin, _sclPin, _freq);
-
-    // Debug
-    LOG_I(MODULE_PREFIX, "setup %s sdaPin %d sclPin %d freq %d", 
-                i2cOk ? "OK" : "FAILED", _sdaPin, _sclPin, _freq);
-#endif
-
-    // Setup MAX30101
-#ifdef FEATURE_MAX30101_SENSOR
-    RaftJsonPrefixed configMAX30101(config, "MAX30101");
-    _max30101.setup(configMAX30101, &_i2cCentral);
-#endif
 
     // Register with device manager
     devMan.registerForDeviceData("I2CA_0x57@0", 
@@ -119,14 +91,14 @@ void HeartEarring::setup(const RaftJsonIF& config, DeviceManager& devMan)
 #endif
 
             // Take the semaphore controlling access to heart rate value
-            if (_heartRateValueMutex && (xSemaphoreTake(_heartRateValueMutex, 10) == pdTRUE))
+            if (RaftMutex_lock(_heartRateValueMutex, 10))
             {
 
                 // Update the heart rate
                 _hrmAnalysisResult = analysisResult;
 
                 // Give back the semaphore
-                xSemaphoreGive(_heartRateValueMutex);
+                RaftMutex_unlock(_heartRateValueMutex);
             }
 
             // Sample collection
@@ -143,13 +115,13 @@ void HeartEarring::setup(const RaftJsonIF& config, DeviceManager& devMan)
                     redJson += (i==0 ? "" : ",") + String(deviceData[i].Red);
                     timeJson += (i==0 ? "" : ",") + String(deviceData[i].timeMs);
                 }
-                if (_lastSamplesJSONMutex && (xSemaphoreTake(_lastSamplesJSONMutex, 2) == pdTRUE))
+                if (RaftMutex_lock(_lastSamplesJSONMutex, 2))
                 {
                     // Store JSON
                     _lastSamplesJSON = "{\"t\":[" + timeJson + "],\"r\":[" + redJson + "],\"i\":[" + irJson + "]}";
 
                     // Give back the semaphore
-                    xSemaphoreGive(_lastSamplesJSONMutex);                    
+                    RaftMutex_unlock(_lastSamplesJSONMutex);                    
                 }
             
 #ifdef DEBUG_FIFO_DATA
@@ -171,30 +143,6 @@ void HeartEarring::loop()
     // Check valid
     if (!_isInitialized)
         return;
-
-#ifdef FEATURE_MAX30101_SENSOR
-    // Service MAX30101
-    _max30101.loop();
-
-    // Handle new sensor data
-    uint16_t sensorValue = 0;
-    uint32_t sampleTimeMs = 0;
-    while(_max30101.getSample(sensorValue, sampleTimeMs))
-    {
-        // Process HRM value
-        _hrmAnalysis.process(sensorValue, sampleTimeMs);
-
-#ifdef DEBUG_HEART_RATE_SAMPLES
-        // Debug
-        LOG_I(MODULE_PREFIX, "loop ms %d red %d lpf %.3f hpf %.3f z %d",
-                sampleTimeMs, 
-                sensorValue,
-                _hrmAnalysis._debugLPFSample,
-                _hrmAnalysis._debugHPFSample,
-                _hrmAnalysis._debugIsZeroCrossing);
-#endif
-    }
-#endif // FEATURE_MAX30101_SENSOR
 
     // Debug
 #ifdef DEBUG_HEART_RATE
@@ -263,16 +211,6 @@ void HeartEarring::shutdown()
     // Check valid
     if (!_isInitialized)
         return;
-
-#ifdef FEATURE_MAX30101_SENSOR
-    // Shutdown MAX30101
-    _max30101.shutdown();
-#endif
-
-#ifdef FEATURE_I2C_STANDALONE
-    // Turn off I2C
-    _i2cCentral.deinit();
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,14 +225,14 @@ double HeartEarring::getNamedValue(const char* valueName, bool& isValid)
     double heartRateBPM = 0;
 
     // Take the semaphore controlling access to heart rate value
-    if (_heartRateValueMutex && (xSemaphoreTake(_heartRateValueMutex, 10) == pdTRUE))
+    if (RaftMutex_lock(_heartRateValueMutex, 10))
     {
         // Get the heart rate
         heartRateBPM = _hrmAnalysisResult.heartRateHz * 60;
         isValid = true;
 
         // Give back the semaphore
-        xSemaphoreGive(_heartRateValueMutex);
+        RaftMutex_unlock(_heartRateValueMutex);
     }
 
     return heartRateBPM;

@@ -9,10 +9,10 @@
 #pragma once
 
 #include "JewelryBase.h"
-#include "MAX30101.h"
-#include "BusI2CESPIDF.h"
 #include "LEDHeart.h"
 #include "HRMAnalysis.h"
+#include "RaftBusDevicesIF.h"
+#include "RaftThreading.h"
 
 class HeartEarring : public JewelryBase
 {
@@ -40,50 +40,38 @@ public:
     // Check if we should wakeup on GPIO
     bool wakeupOnGPIO()
     {
-#ifdef FEATURE_MAX30101_SENSOR
-        return _max30101.wakeupOnGPIO();
-#else
         return false;
-#endif
     }
 
     // Debug check if samples available
     virtual bool debugAreSamplesAvailable() override final
     {
-#ifdef FEATURE_MAX30101_SENSOR
-        return _max30101.debugAreSamplesAvailable();
-#else
         bool isAvailable = false;
-        if (_lastSamplesJSONMutex && (xSemaphoreTake(_lastSamplesJSONMutex, 2) == pdTRUE))
+        if (RaftMutex_lock(_lastSamplesJSONMutex, 2))
         {
             // Flag
             isAvailable = _lastSamplesJSON.length() > 0;
 
             // Give back the semaphore
-            xSemaphoreGive(_lastSamplesJSONMutex);
+            RaftMutex_unlock(_lastSamplesJSONMutex);
         }
         return isAvailable;       
-#endif
     }
 
     // Debug get last samples JSON
     virtual String debugGetLastSamplesJSON() override final
     {
-#ifdef FEATURE_MAX30101_SENSOR
-        return _max30101.debugGetLastSamplesJSON();
-#else
         String samplesJSON;
-        if (_lastSamplesJSONMutex && (xSemaphoreTake(_lastSamplesJSONMutex, 2) == pdTRUE))
+        if (RaftMutex_lock(_lastSamplesJSONMutex, 2))
         {
             // Flag
             samplesJSON = _lastSamplesJSON;
             _lastSamplesJSON = "";
 
             // Give back the semaphore
-            xSemaphoreGive(_lastSamplesJSONMutex);
+            RaftMutex_unlock(_lastSamplesJSONMutex);
         }    
         return samplesJSON;
-#endif
     }
 
     /// @brief Get named value
@@ -106,19 +94,6 @@ private:
     // Animation mode
     bool _isPulseStart = true;
 
-#ifdef FEATURE_MAX30101_SENSOR
-    // MAX30101
-    MAX30101 _max30101;
-#endif
-
-#ifdef FEATURE_I2C_STANDALONE
-    // I2C
-    BusI2CESPIDF _i2cCentral;
-    int _sdaPin = -1;
-    int _sclPin = -1;
-    int _freq = 100000;
-#endif
-
     // Raft bus device decode state
     RaftBusDeviceDecodeState _decodeState;
 
@@ -129,16 +104,15 @@ private:
     HRMAnalysis _hrmAnalysis;
 
     // Semaphore for access to heart rate anaylsis result
-    SemaphoreHandle_t _heartRateValueMutex = nullptr;
+    RaftMutex _heartRateValueMutex;
     HRMAnalysis::HRMResult _hrmAnalysisResult;
 
     // HRM samples
     bool _collectHRM = false;
     String _lastSamplesJSON;
-    SemaphoreHandle_t _lastSamplesJSONMutex = nullptr;
+    RaftMutex _lastSamplesJSONMutex;
 
     // Debug
     uint32_t _lastDebugTimeMs = 0;
     static constexpr const char *MODULE_PREFIX = "HeartEarring";
-
 };

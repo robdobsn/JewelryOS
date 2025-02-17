@@ -11,6 +11,7 @@
 #include "RaftJson.h"
 #include "HeartEarring.h"
 #include "GridEarring.h"
+#include "SysManager.h"
 #include "RestAPIEndpointManager.h"
 #include "esp_private/esp_clk.h"
 #include "esp_sleep.h"

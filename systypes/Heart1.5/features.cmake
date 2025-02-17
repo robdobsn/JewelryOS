@@ -21,15 +21,12 @@ add_compile_definitions(FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN)
 # Enable heart LED animations
 # add_compile_definitions(FEATURE_HEART_ANIMATIONS)
 
-# Enable MAX30101 sensor and stand-alone I2C bus
-# add_compile_definitions(FEATURE_MAX30101_SENSOR)
-# add_compile_definitions(FEATURE_I2C_STANDALONE)
-
 # Add I2C bus in main
 add_compile_definitions(FEATURE_REGISTER_I2C_BUS_IN_MAIN)
 
 # Raft components
 set(RAFT_COMPONENTS
+    RaftCore@main
     RaftSysMods@main
     RaftI2C@main
 )
