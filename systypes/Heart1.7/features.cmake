@@ -19,7 +19,7 @@ add_compile_definitions(FEATURE_POWER_CONTROL_USER_SHUTDOWN)
 add_compile_definitions(FEATURE_POWER_CONTROL_LOW_BATTERY_SHUTDOWN)
 
 # Enable heart LED animations
-# add_compile_definitions(FEATURE_HEART_ANIMATIONS)
+add_compile_definitions(FEATURE_HEART_ANIMATIONS)
 
 # Add I2C bus in main
 add_compile_definitions(FEATURE_REGISTER_I2C_BUS_IN_MAIN)

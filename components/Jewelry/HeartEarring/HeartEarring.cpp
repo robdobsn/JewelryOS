@@ -8,6 +8,7 @@
 
 #include "HeartEarring.h"
 #include "ConfigPinMap.h"
+#include "RaftCore.h"
 #include "RaftJsonPrefixed.h"
 #include "DeviceManager.h"
 #include "DevicePollRecords_generated.h"
